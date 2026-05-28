@@ -6,13 +6,15 @@
 //
 import Foundation
 
-struct Player {
+struct Nugget {
+    var name: String
+    
     var numSpeedDice: Int
     var hp: Int
     var stagger: Int
     var light: Int
     var maxLight: Int
-    var dice: [Dice]
+    var dice: [SpeedDice]
     
     var slash: Double
     var pierce: Double
@@ -21,16 +23,46 @@ struct Player {
     var staggerSlash: Double
     var staggerPierce: Double
     var staggerBlunt: Double
+    
+    var deck: [Card]
+    var statuses: [Status]
 }
 
-struct Dice {
+struct SpeedDice {
     var min: Int
     var max: Int
-    var atk: Card
 }
 
 struct Card {
     var numDice: Int
     var cost: Int
-        
+    var dice: Dice
+}
+
+struct Dice {
+    
+}
+
+enum atktype {
+    case slash, blunt, pierce
+}
+
+enum dicetype {
+    case atk, evade, block
+}
+
+struct Status {
+    var bleed: Int = 0
+    var paralyze: Int = 0
+    var burn: Int = 0
+    var protection: Int = 0
+    var staggerProtection: Int = 0
+    var fragile: Int = 0
+    var strength: Int = 0
+    var feeble: Int = 0
+    var haste: Int = 0
+    var bind: Int = 0
+    var charge: Int = 0
+    var endurance: Int = 0
+    var disarm: Int = 0
 }
