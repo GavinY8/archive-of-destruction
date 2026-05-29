@@ -9,7 +9,6 @@ import Foundation
 struct Nugget {
     var name: String
     
-    var numSpeedDice: Int
     var hp: Int
     var stagger: Int
     var light: Int
@@ -26,6 +25,23 @@ struct Nugget {
     
     var deck: [Card]
     var statuses: [Status]
+    
+    init(name: String, hp: Int, stagger: Int, light: Int, maxLight: Int, dice: [SpeedDice], slash: Double, pierce: Double, blunt: Double, staggerSlash: Double, staggerPierce: Double, staggerBlunt: Double, deck: [Card], statuses: [Status] = []) {
+           self.name = name
+           self.hp = hp
+           self.stagger = stagger
+           self.light = light
+           self.maxLight = maxLight
+           self.dice = dice
+           self.slash = slash
+           self.pierce = pierce
+           self.blunt = blunt
+           self.staggerSlash = staggerSlash
+           self.staggerPierce = staggerPierce
+           self.staggerBlunt = staggerBlunt
+           self.deck = deck
+           self.statuses = statuses
+   }
 }
 
 struct SpeedDice {
@@ -43,6 +59,7 @@ struct Dice {
     var minRoll: Int
     var maxRoll: Int
     var type: dicetype
+    var atkType: atktype? = nil
 }
 
 enum atktype {
