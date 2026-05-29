@@ -34,13 +34,15 @@ struct SpeedDice {
 }
 
 struct Card {
-    var numDice: Int
+    var name: String
     var cost: Int
-    var dice: Dice
+    var dice: [Dice]
 }
 
 struct Dice {
-    
+    var minRoll: Int
+    var maxRoll: Int
+    var type: dicetype
 }
 
 enum atktype {
