@@ -26,7 +26,7 @@ struct Nugget {
     var deck: [Card]
     var statuses: [Status]
     
-    init(name: String, hp: Int, stagger: Int, light: Int, maxLight: Int, dice: [SpeedDice], slash: Double, pierce: Double, blunt: Double, staggerSlash: Double, staggerPierce: Double, staggerBlunt: Double, deck: [Card], statuses: [Status] = []) {
+    init(name: String, hp: Int, stagger: Int, light: Int, maxLight: Int, dice: [SpeedDice], slash: Double, pierce: Double, blunt: Double, staggerSlash: Double, staggerPierce: Double, staggerBlunt: Double, deck: [Card], statuses: [Status]) {
            self.name = name
            self.hp = hp
            self.stagger = stagger
@@ -70,18 +70,22 @@ enum dicetype {
     case atk, evade, block
 }
 
+enum statusType {
+    case bleed, paralyze, burn, protection, staggerProtection, fragile, strength, feeble, haste, bind, charge, endurance, disarm
+}
+
 struct Status {
-    var bleed: Int = 0
-    var paralyze: Int = 0
-    var burn: Int = 0
-    var protection: Int = 0
-    var staggerProtection: Int = 0
-    var fragile: Int = 0
-    var strength: Int = 0
-    var feeble: Int = 0
-    var haste: Int = 0
-    var bind: Int = 0
-    var charge: Int = 0
-    var endurance: Int = 0
-    var disarm: Int = 0
+    var type: statusType
+    var stacks: Int
+}
+
+struct Deck {
+    private var drawPile: [Card] = []
+    
+    mutating func drawCard(from originalDeck: [Card]) -> Card {
+        if drawPile.isEmpty {
+            drawPile = originalDeck.shuffled()
+        }
+        return drawPile.removeFirst()
+    }
 }
