@@ -8,6 +8,11 @@ import Foundation
 
 struct CardDatabase {
     //0-Cost Cards
+    static let evade = Card (
+        name: "Evade",
+        cost: 0,
+        dice: [Dice(minRoll: 1, maxRoll: 4, type: .evade)]
+    )
     
     //1-Cost Cards
     static let lightAttack = Card(
@@ -21,9 +26,22 @@ struct CardDatabase {
     //2-Cost Cards
     
     //3-Cost Cards
+    static let focusedStrikes = Card(
+        name: "Focused Strikes",
+        cost: 3,
+        dice: [
+            Dice(minRoll: 3, maxRoll: 5, type: .atk, atkType: .slash),
+            Dice(minRoll: 3, maxRoll: 5, type: .atk, atkType: .slash),
+            Dice(minRoll: 1, maxRoll: 3, type: .atk, atkType: .pierce)
+
+
+        ]
+    )
     
     //Starter Deck
     static let starterDeck: [Card] = [
-        lightAttack, lightAttack, lightAttack
+        evade, evade, evade,
+        lightAttack, lightAttack, lightAttack,
+        focusedStrikes, focusedStrikes, focusedStrikes
     ]
 }
