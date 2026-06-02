@@ -19,4 +19,6 @@ var startChar = Nugget(
     staggerSlash: 1,
     staggerPierce: 1.5,
     staggerBlunt: 2,
-    deck: CardDatabase.starterDeck)
+    deck: CardDatabase.starterDeck,
+    statuses: <#T##[Status]#>
+)

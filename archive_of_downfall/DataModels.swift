@@ -24,6 +24,9 @@ struct Nugget {
     var staggerBlunt: Double
     
     var deck: [Card]
+    var hand: [Card]
+    var discard: [Card]
+    
     var statuses: [Status]
     
     init(name: String, hp: Int, stagger: Int, light: Int, maxLight: Int, dice: [SpeedDice], slash: Double, pierce: Double, blunt: Double, staggerSlash: Double, staggerPierce: Double, staggerBlunt: Double, deck: [Card], statuses: [Status]) {
