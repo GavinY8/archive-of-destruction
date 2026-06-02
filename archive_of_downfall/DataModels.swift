@@ -13,7 +13,7 @@ struct Nugget {
     var stagger: Int
     var light: Int
     var maxLight: Int
-    var dice: [SpeedDice]
+    var speedDice: [SpeedDice]
     
     var slash: Double
     var pierce: Double
@@ -25,28 +25,12 @@ struct Nugget {
     
     var deck: [Card]
     var statuses: [Status]
-    
-    init(name: String, hp: Int, stagger: Int, light: Int, maxLight: Int, dice: [SpeedDice], slash: Double, pierce: Double, blunt: Double, staggerSlash: Double, staggerPierce: Double, staggerBlunt: Double, deck: [Card], statuses: [Status]) {
-           self.name = name
-           self.hp = hp
-           self.stagger = stagger
-           self.light = light
-           self.maxLight = maxLight
-           self.dice = dice
-           self.slash = slash
-           self.pierce = pierce
-           self.blunt = blunt
-           self.staggerSlash = staggerSlash
-           self.staggerPierce = staggerPierce
-           self.staggerBlunt = staggerBlunt
-           self.deck = deck
-           self.statuses = statuses
-   }
 }
 
 struct SpeedDice {
     var min: Int
     var max: Int
+    var assignedCard: Card?
 }
 
 struct Card {
@@ -58,34 +42,34 @@ struct Card {
 struct Dice {
     var minRoll: Int
     var maxRoll: Int
-    var type: dicetype
-    var atkType: atktype? = nil
+    var type: DiceType
+    var atkType: AtkType? = nil
 }
 
-enum atktype {
+enum AtkType {
     case slash, blunt, pierce
 }
 
-enum dicetype {
+enum DiceType {
     case atk, evade, block
 }
 
-enum statusType {
-    case bleed, paralyze, burn, protection, staggerProtection, fragile, strength, feeble, haste, bind, charge, endurance, disarm
+enum StatusType {
+    case bleed, paralysis, burn, protection, staggerProtection, fragile, strength, feeble, endurance, disarm, haste, bind
 }
 
 struct Status {
-    var type: statusType
+    var type: StatusType
     var stacks: Int
 }
 
-struct Deck {
-    private var drawPile: [Card] = []
-    
-    mutating func drawCard(from originalDeck: [Card]) -> Card {
-        if drawPile.isEmpty {
-            drawPile = originalDeck.shuffled()
+    struct Deck {
+        private var drawPile: [Card] = []
+        
+        mutating func drawCard(from originalDeck: [Card]) -> Card {
+            if drawPile.isEmpty {
+                drawPile = originalDeck.shuffled()
+            }
+            return drawPile.removeFirst()
         }
-        return drawPile.removeFirst()
     }
-}
