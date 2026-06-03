@@ -10,7 +10,9 @@ struct Nugget {
     var name: String
     
     var hp: Int
+    var maxhp: Int
     var stagger: Int
+    var maxStagger: Int
     var light: Int
     var maxLight: Int
     var speedDice: [SpeedDice]
@@ -28,6 +30,8 @@ struct Nugget {
     var discard: [Card]
     
     var statuses: [Status]
+    
+    var isStaggered: Bool = false
 }
 
 struct SpeedDice {
@@ -66,13 +70,13 @@ struct Status {
     var stacks: Int
 }
 
-    struct Deck {
-        private var drawPile: [Card] = []
-        
-        mutating func drawCard(from originalDeck: [Card]) -> Card {
-            if drawPile.isEmpty {
-                drawPile = originalDeck.shuffled()
-            }
-            return drawPile.removeFirst()
+struct Deck {
+    private var drawPile: [Card] = []
+    
+    mutating func drawCard(from originalDeck: [Card]) -> Card {
+        if drawPile.isEmpty {
+            drawPile = originalDeck.shuffled()
         }
+        return drawPile.removeFirst()
     }
+}

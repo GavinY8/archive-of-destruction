@@ -34,27 +34,6 @@ struct StatusManager {
         nugget.statuses.removeAll(where: {$0.type == type})
     }
     
-    
-    /// Triggered exclusively at Scene Start (Haste, Bind, Paralysis, Strength, etc.)
-    static func triggerSceneStartStatuses(on nugget: inout Nugget) {
-        // 1. Process Haste and Bind first (affects Speed Dice parameters before they roll)
-        if let hasteIndex = nugget.statuses.firstIndex(where: { $0.type == .haste }) {
-            let stacks = nugget.statuses[hasteIndex].stacks
-            for i in 0..<nugget.speedDice.count {
-                nugget.speedDice[i].min += stacks
-                nugget.speedDice[i].max += stacks
-            }
-        }
-        
-        if let bindIndex = nugget.statuses.firstIndex(where: { $0.type == .bind }) {
-            let stacks = nugget.statuses[bindIndex].stacks
-            for i in 0..<nugget.speedDice.count {
-                nugget.speedDice[i].min = max(1, nugget.speedDice[i].min - stacks)
-                nugget.speedDice[i].max = max(1, nugget.speedDice[i].max - stacks)
-            }
-        }
-    }
-    
     static func triggerAttackStartStatuses(on nugget: inout Nugget) {
         // 2. Process Page-Modifying Statuses (Strength, Feeble, Endurance, Disarm, Paralysis)
         // Must be calculated after player assigns cards to dice, right before clash resolution.

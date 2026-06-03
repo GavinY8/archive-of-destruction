@@ -6,6 +6,25 @@
 //
 import Foundation
 
+func turnStart(player: inout Nugget, enemy: inout Nugget) {
+    if !player.isStaggered {
+        if (player.light < player.maxLight) {
+            player.light+=1
+        }
+    }
+
+    if !enemy.isStaggered {
+        if (enemy.light < enemy.maxLight) {
+            enemy.light+=1
+        }
+    }
+}
+
+func turnEnd(player: inout Nugget, enemy: inout Nugget) {
+    StatusManager.triggerSceneEndStatuses(on: &player)
+    StatusManager.triggerSceneEndStatuses(on: &enemy)
+}
+
 func clash(player: inout Nugget, enemy: inout Nugget) {
     // 1. Both units choose a card from their hand
     guard var playerCard = chooseCard(unit: &player, strategy: "highest_cost"),
@@ -34,8 +53,99 @@ func roll(min: Int, max: Int) -> Int {
     return Int.random(in: min...max)
 }
 
-func attack() {
+func attack(attacker: inout Nugget, defender: inout Nugget, chosenCard: Card) {
+    // 1. Create a deep local copy of the card so mutations do not ruin your deck/hand blueprints
+    var temporaryCardCopy = chosenCard
     
+    // 2. Wrap it inside a temporary speed die so your original status structure can parse it safely
+    var temporarySpeedDie = SpeedDice(min: 1, max: 1, assignedCard: temporaryCardCopy)
+    
+    // 3. Create a mock nugget container to isolate modifications safely
+    var mockAttacker = attacker
+    mockAttacker.speedDice = [temporarySpeedDie]
+    
+    // 4. Run your exact status preparation method safely on the mock target
+    StatusManager.triggerAttackStartStatuses(on: &mockAttacker)
+    
+    // 5. Extract the modified card out of the processed isolated speed slot
+    var processedCard = mockAttacker.speedDice[0].assignedCard!
+    
+    print("\n💥 UNOPPOSED ATTACK: \(attacker.name) uses pre-calculated [\(processedCard.name)]")
+    
+    // 6. Run your dice queue processing loop
+    while !processedCard.dice.isEmpty {
+        let modifiedDie = processedCard.dice.removeFirst()
+        
+        if modifiedDie.type == .atk {
+            StatusManager.triggerBleedStatus(on: &attacker) // Bleed still ticks on real attacker hp
+        }
+        
+        // Because stats were already backed into minRoll/maxRoll by your function,
+        // we can now safely use a standard randomized roll without dynamic math helpers!
+        let rollResult = roll(min: modifiedDie.minRoll, max: modifiedDie.maxRoll)
+        print("🎲 \(attacker.name) rolls a pre-calculated \(rollResult) (Physical Type: \(String(describing: modifiedDie.atkType)))")
+        
+        // --- DAMAGE RESOLUTION LOGIC ---
+        if modifiedDie.type == .atk {
+            // 1. Calculate health and stagger damage using your flat-modifier logic
+            let damage = calculateDamage(baseRoll: rollResult, type: modifiedDie.atkType, target: defender)
+            
+            // 2. Apply damage to the real defender nugget pools
+            defender.hp = max(0, defender.hp - damage.healthDamage)
+            defender.stagger = max(0, defender.stagger - damage.staggerDamage)
+            
+            print("💥 Deal to \(defender.name): \(damage.healthDamage) HP Damage | \(damage.staggerDamage) Stagger Damage")
+            print("📊 \(defender.name) Status: HP (\(defender.hp)) | Stagger (\(defender.stagger))")
+            
+            // 3. Handle break state triggers if necessary
+            if defender.hp <= 0 {
+                print("💀 \(defender.name) has been defeated!")
+                break
+            }
+            if defender.stagger <= 0 {
+                print("🥴 \(defender.name) has been Staggered!")
+                // Trigger any specific staggered state flags here if needed
+            }
+        }
+    }
+}
+
+private func calculateDamage(baseRoll: Int, type: AtkType?, target: Nugget) -> (healthDamage: Int, staggerDamage: Int) {
+    guard let type = type else { return (baseRoll, baseRoll) }
+    
+    // 1. Fetch status stacks
+    let fragile = StatusManager.getStacks(of: .fragile, on: target)
+    let protection = StatusManager.getStacks(of: .protection, on: target)
+    let staggerProtection = StatusManager.getStacks(of: .staggerProtection, on: target)
+    
+    // 2. Apply flat status modifiers to the base roll first
+    let healthStatusModifier = fragile - protection
+    let modifiedHealthBase = max(0.0, Double(baseRoll + healthStatusModifier))
+    
+    // Stagger protection reduces incoming stagger damage
+    let modifiedStaggerBase = max(0.0, Double(baseRoll - staggerProtection))
+    
+    // 3. Extract defensive weakness multipliers
+    let healthMultiplier: Double
+    let staggerMultiplier: Double
+    
+    switch type {
+    case .slash:
+        healthMultiplier = target.slash
+        staggerMultiplier = target.staggerSlash
+    case .pierce:
+        healthMultiplier = target.pierce
+        staggerMultiplier = target.staggerPierce
+    case .blunt:
+        healthMultiplier = target.blunt
+        staggerMultiplier = target.staggerBlunt
+    }
+    
+    // 4. Multiply modified base damage by weaknesses and round
+    let healthDamage = max(0, Int((modifiedHealthBase * healthMultiplier).rounded()))
+    let staggerDamage = max(0, Int((modifiedStaggerBase * staggerMultiplier).rounded()))
+    
+    return (healthDamage, staggerDamage)
 }
 
 func chooseCard(unit: inout Nugget, strategy: String = "highest_cost") -> Card? {
@@ -72,3 +182,29 @@ func chooseCard(unit: inout Nugget, strategy: String = "highest_cost") -> Card? 
     
     return selectedCard
 }
+
+private func handleStaggerRecovery(target: inout Nugget) {
+    if target.isStaggered {
+        target.isStaggered = false
+        target.stagger = target.maxStagger // Fully restore the stagger pool
+        print("🛡️ \(target.name) has recovered from Stagger!")
+    }
+}
+
+func rollAllSpeedDice(for nugget: Nugget) -> [Int] {
+    var rolledResults: [Int] = []
+    
+    let haste = StatusManager.getStacks(of: .haste, on: nugget)
+    let bind = StatusManager.getStacks(of: .bind, on: nugget)
+    
+    for baseDie in nugget.speedDice {
+        let finalMin = max(1, baseDie.min + haste - bind)
+        let finalMax = max(1, baseDie.max + haste - bind)
+        
+        let rolledValue = roll(min: finalMin, max: finalMax)
+        rolledResults.append(rolledValue)
+    }
+    
+    return rolledResults
+}
+
