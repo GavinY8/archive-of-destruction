@@ -46,6 +46,8 @@ func clash(player: inout Nugget, enemy: inout Nugget) {
         print("🎲 \(player.name) rolled \(playerRoll) (\(playerDie.type)) vs \(enemy.name) rolled \(enemyRoll) (\(enemyDie.type))")
         // Add your Evade/Block logic checks down here...
     }
+    
+    
 }
 
 
@@ -55,10 +57,10 @@ func roll(min: Int, max: Int) -> Int {
 
 func attack(attacker: inout Nugget, defender: inout Nugget, chosenCard: Card) {
     // 1. Create a deep local copy of the card so mutations do not ruin your deck/hand blueprints
-    var temporaryCardCopy = chosenCard
+    let temporaryCardCopy = chosenCard
     
     // 2. Wrap it inside a temporary speed die so your original status structure can parse it safely
-    var temporarySpeedDie = SpeedDice(min: 1, max: 1, assignedCard: temporaryCardCopy)
+    let temporarySpeedDie = SpeedDice(min: 1, max: 1, assignedCard: temporaryCardCopy)
     
     // 3. Create a mock nugget container to isolate modifications safely
     var mockAttacker = attacker
