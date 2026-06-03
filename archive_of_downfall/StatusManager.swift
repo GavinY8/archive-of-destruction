@@ -30,129 +30,119 @@ struct StatusManager {
         }
     }
     
-    static func statusTrigger(of type: StatusType, on nugget: inout Nugget) {
-        guard let index = nugget.statuses.firstIndex(where: { $0.type == type }) else { return }
-        let currentStatus = nugget.statuses[index]
+    static func removeStatus(type: StatusType, from nugget: inout Nugget) {
+        nugget.statuses.removeAll(where: {$0.type == type})
+    }
+    
+    
+    /// Triggered exclusively at Scene Start (Haste, Bind, Paralysis, Strength, etc.)
+    static func triggerSceneStartStatuses(on nugget: inout Nugget) {
+        // 1. Process Haste and Bind first (affects Speed Dice parameters before they roll)
+        if let hasteIndex = nugget.statuses.firstIndex(where: { $0.type == .haste }) {
+            let stacks = nugget.statuses[hasteIndex].stacks
+            for i in 0..<nugget.speedDice.count {
+                nugget.speedDice[i].min += stacks
+                nugget.speedDice[i].max += stacks
+            }
+        }
         
-        switch type {
-        case .burn:
-            nugget.hp -= currentStatus.stacks
-            let remainingStacks = (currentStatus.stacks * 2) / 3
-                
-            if remainingStacks > 0 {
-                nugget.statuses[index].stacks = remainingStacks
-            } else {
-                nugget.statuses.remove(at: index)
-            }
-            
-        case .paralysis:
-            let stacksToApply = currentStatus.stacks
-            guard stacksToApply > 0 else { break }
-            
+        if let bindIndex = nugget.statuses.firstIndex(where: { $0.type == .bind }) {
+            let stacks = nugget.statuses[bindIndex].stacks
             for i in 0..<nugget.speedDice.count {
-                guard let assignedCard = nugget.speedDice[i].assignedCard else { continue }
-                var cardDiceIndices = Array(0..<assignedCard.dice.count)
-                cardDiceIndices.shuffle()
-                
-                let targetDiceForCard = cardDiceIndices.prefix(stacksToApply)
-                
-                for j in targetDiceForCard {
-                    let calculatedMax = (nugget.speedDice[i].assignedCard?.dice[j].maxRoll ?? 0) - 3
-                    nugget.speedDice[i].assignedCard?.dice[j].maxRoll = max(1, calculatedMax)
-                    
-                    if let currentDie = nugget.speedDice[i].assignedCard?.dice[j] {
-                        if currentDie.maxRoll < currentDie.minRoll {
-                            nugget.speedDice[i].assignedCard?.dice[j].minRoll = currentDie.maxRoll
-                        }
-                    }
-                }
+                nugget.speedDice[i].min = max(1, nugget.speedDice[i].min - stacks)
+                nugget.speedDice[i].max = max(1, nugget.speedDice[i].max - stacks)
             }
-        
-        case .strength:
-            let bonusToApply = currentStatus.stacks
-            guard bonusToApply > 0 else { break }
-               
-            for i in 0..<nugget.speedDice.count {
-                guard let assignedCard = nugget.speedDice[i].assignedCard else { continue }
-                for j in 0..<assignedCard.dice.count {
-                    if assignedCard.dice[j].type == .atk {
-                        nugget.speedDice[i].assignedCard?.dice[j].minRoll += bonusToApply
-                        nugget.speedDice[i].assignedCard?.dice[j].maxRoll += bonusToApply
-                    }
-                }
-            }
-            
-        case .feeble:
-            let penalty = currentStatus.stacks
-            guard penalty > 0 else { break }
-               
-            for i in 0..<nugget.speedDice.count {
-                guard let assignedCard = nugget.speedDice[i].assignedCard else { continue }
-                for j in 0..<assignedCard.dice.count {
-                    if assignedCard.dice[j].type == .atk {
-                        let calculatedMin = assignedCard.dice[j].minRoll - penalty
-                        let calculatedMax = assignedCard.dice[j].maxRoll - penalty
-                        
-                        nugget.speedDice[i].assignedCard?.dice[j].minRoll = max(1, calculatedMin)
-                        nugget.speedDice[i].assignedCard?.dice[j].maxRoll = max(1, calculatedMax)
-                    }
-                }
-            }
-            
-        case .endurance:
-            let bonusToApply = currentStatus.stacks
-            guard bonusToApply > 0 else { break }
-               
-            for i in 0..<nugget.speedDice.count {
-                guard let assignedCard = nugget.speedDice[i].assignedCard else { continue }
-                for j in 0..<assignedCard.dice.count {
-                    if assignedCard.dice[j].type != .atk {
-                        nugget.speedDice[i].assignedCard?.dice[j].minRoll += bonusToApply
-                        nugget.speedDice[i].assignedCard?.dice[j].maxRoll += bonusToApply
-                    }
-                }
-            }
-            
-        case .disarm:
-            let penalty = currentStatus.stacks
-            guard penalty > 0 else { break }
-               
-            for i in 0..<nugget.speedDice.count {
-                guard let assignedCard = nugget.speedDice[i].assignedCard else { continue }
-                for j in 0..<assignedCard.dice.count {
-                    if assignedCard.dice[j].type != .atk {
-                        let calculatedMin = assignedCard.dice[j].minRoll - penalty
-                        let calculatedMax = assignedCard.dice[j].maxRoll - penalty
-                        
-                        nugget.speedDice[i].assignedCard?.dice[j].minRoll = max(1, calculatedMin)
-                        nugget.speedDice[i].assignedCard?.dice[j].maxRoll = max(1, calculatedMax)
-                    }
-                }
-            }
-            
-        case .haste:
-            let bonusToApply = currentStatus.stacks
-            guard bonusToApply > 0 else { break }
-            
-            for i in 0..<nugget.speedDice.count {
-                nugget.speedDice[i].min += bonusToApply
-                nugget.speedDice[i].max += bonusToApply
-            }
-            
-        case .bind:
-            let penalty = currentStatus.stacks
-            guard penalty > 0 else { break }
-            
-            for i in 0..<nugget.speedDice.count {
-                let calculatedMin = nugget.speedDice[i].min - penalty
-                let calculatedMax = nugget.speedDice[i].max - penalty
-                
-                nugget.speedDice[i].min = max(1, calculatedMin)
-                nugget.speedDice[i].max = max(1, calculatedMax)
-            }
-            
-        default:
-            break
         }
     }
+    
+    static func triggerAttackStartStatuses(on nugget: inout Nugget) {
+        // 2. Process Page-Modifying Statuses (Strength, Feeble, Endurance, Disarm, Paralysis)
+        // Must be calculated after player assigns cards to dice, right before clash resolution.
+        let strength = getStacks(of: .strength, on: nugget)
+        let feeble = getStacks(of: .feeble, on: nugget)
+        let endurance = getStacks(of: .endurance, on: nugget)
+        let disarm = getStacks(of: .disarm, on: nugget)
+        let paralysis = getStacks(of: .paralysis, on: nugget)
+        
+        for i in 0..<nugget.speedDice.count {
+            guard var assignedCard = nugget.speedDice[i].assignedCard else { continue }
+            
+            // Track how many dice we need to paralyze for this specific card
+            var paralysisRemaining = paralysis
+            var diceIndices = Array(0..<assignedCard.dice.count)
+            diceIndices.shuffle() // Ruina paralyzes random dice on the page
+            
+            for j in 0..<assignedCard.dice.count {
+                var die = assignedCard.dice[j]
+                
+                // Apply Strength / Feeble to Attack Dice
+                if die.type == .atk {
+                    die.minRoll = max(1, die.minRoll + strength - feeble)
+                    die.maxRoll = max(1, die.maxRoll + strength - feeble)
+                }
+                // Apply Endurance / Disarm to Defensive Dice
+                else {
+                    die.minRoll = max(1, die.minRoll + endurance - disarm)
+                    die.maxRoll = max(1, die.maxRoll + endurance - disarm)
+                }
+                
+                // Apply Paralysis (Reduces Max Roll of random dice by 3)
+                if paralysisRemaining > 0 && diceIndices.contains(j) {
+                    die.maxRoll = max(1, die.maxRoll - 3)
+                    if die.maxRoll < die.minRoll {
+                        die.minRoll = die.maxRoll
+                    }
+                    paralysisRemaining -= 1
+                }
+                
+                assignedCard.dice[j] = die
+            }
+            nugget.speedDice[i].assignedCard = assignedCard
+        }
+    }
+    
+    /// Triggered every single time this nugget rolls an offensive Combat Die
+    static func triggerBleedStatus(on nugget: inout Nugget) {
+        if let bleedIndex = nugget.statuses.firstIndex(where: { $0.type == .bleed }) {
+            let stacks = nugget.statuses[bleedIndex].stacks
+            
+            // 1. Deal mid-combat damage equal to current stacks
+            nugget.hp -= stacks
+            
+            // 2. Calculate decay (1/3 rounded up) using integer math ceiling formula: (X + 2) / 3
+            let decaySubtraction = (stacks + 2) / 3
+            let remaining = stacks - decaySubtraction
+            
+            // 3. Immediately update or remove the status so the NEXT die in the queue sees the new values
+            if remaining > 0 {
+                nugget.statuses[bleedIndex].stacks = remaining
+            } else {
+                nugget.statuses.remove(at: bleedIndex)
+            }
+        }
+    }
+    
+    /// Triggered exclusively at Scene End (Ticks damage statuses down)
+    static func triggerSceneEndStatuses(on nugget: inout Nugget) {
+        // Process Burn Tick
+        if let burnIndex = nugget.statuses.firstIndex(where: { $0.type == .burn }) {
+            let stacks = nugget.statuses[burnIndex].stacks
+            nugget.hp -= stacks
+            
+            let decaySubtraction = max(1, stacks / 3)
+            let remaining = stacks - decaySubtraction
+            
+            if remaining > 0 {
+                nugget.statuses[burnIndex].stacks = remaining
+            } else {
+                nugget.statuses.remove(at: burnIndex)
+            }
+        }
+        
+        // Clean up temporary next-turn statuses at the end of the combat round
+        let expirationList: [StatusType] = [.strength, .feeble, .endurance, .disarm, .paralysis, .haste, .bind]
+                nugget.statuses.removeAll(where: { expirationList.contains($0.type) })
+    }
+    
+    
 }
