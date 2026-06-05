@@ -40,8 +40,8 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         StatusManager.triggerBleedStatus(on: &player)
         StatusManager.triggerBleedStatus(on: &enemy)
         
-        var tempPDice = tempPCard.dice.first!
-        var tempEDice = tempECard.dice.first!
+        let tempPDice = tempPCard.dice.first!
+        let tempEDice = tempECard.dice.first!
 
         
         var pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
@@ -97,6 +97,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                eRoll-=pRoll
                 attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
             }
         } else if (tempPDice.type == .block && tempEDice.type == .block) {
@@ -166,9 +167,9 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
     while (!tempPCard.dice.isEmpty) {
         StatusManager.triggerBleedStatus(on: &player)
         
-        var tempPDice = tempPCard.dice.first!
+        let tempPDice = tempPCard.dice.first!
         
-        var pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
+        let pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
         
         attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
         tempPCard.dice.removeFirst()
@@ -177,9 +178,9 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
     while (!tempECard.dice.isEmpty) {
         StatusManager.triggerBleedStatus(on: &enemy)
         
-        var tempEDice = tempPCard.dice.first!
+        let tempEDice = tempPCard.dice.first!
         
-        var eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
+        let eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
         
         attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
         tempECard.dice.removeFirst()

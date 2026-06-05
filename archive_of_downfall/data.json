@@ -1,0 +1,10 @@
+{
+    "tutorial": [
+        {"name": "Teacher", "text": "Welcome to the Swift tutorial!"},
+        {"name": "Student", "text": "Thanks! I am ready to learn."}
+    ],
+    "story1": [
+        {"name": "Narrator", "text": "Once upon a time in Xcode..."},
+        {"name": "Hero", "text": "I will fix this bug!"}
+    ]
+}
