@@ -25,6 +25,7 @@ func turnEnd(player: inout Nugget, enemy: inout Nugget) {
     StatusManager.triggerSceneEndStatuses(on: &enemy)
 }
 
+///we need another function to check for if a clash even occurs, but i think this clash is done
 func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCard: Card) {
     var tempP = player
     var tempE = enemy
@@ -47,6 +48,9 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         var eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
         
         //check dice type here haha funny 300000000 line code
+        
+        
+        ///player attack
         if (tempPDice.type == .atk && tempEDice.type == .atk) {
             if (pRoll > eRoll) {
                 tempECard.dice.removeFirst()
@@ -69,7 +73,8 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
             } else if (pRoll <= eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
-                player.stagger-=(eRoll-pRoll)
+                player.stagger -= (eRoll-pRoll)
+                staggerCheck(target: &player)
             }
         } else if (tempPDice.type == .atk && tempEDice.type == .evade) {
             if (pRoll > eRoll) {
@@ -78,19 +83,106 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
             } else if (pRoll <= eRoll) {
                 tempPCard.dice.removeFirst()
-                enemy.stagger+=eRoll
+                enemy.stagger = min(enemy.maxStagger, enemy.stagger+eRoll)
             }
-        } else if (tempPDice.type == .block && tempEDice.type == .atk) {
+        }
+        
+        ///player block
+        else if (tempPDice.type == .block && tempEDice.type == .atk) {
             if (pRoll >= eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
                 enemy.stagger-=(pRoll-eRoll)
+                staggerCheck(target: &enemy)
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
                 attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
             }
-        } else if ()
+        } else if (tempPDice.type == .block && tempEDice.type == .block) {
+            if (pRoll > eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                enemy.stagger-=pRoll
+                staggerCheck(target: &enemy)
+            } else if (pRoll < eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                player.stagger-=eRoll
+                staggerCheck(target: &player)
+            } else {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+            }
+        } else if (tempPDice.type == .block && tempEDice.type == .evade) {
+            if (pRoll > eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                enemy.stagger-=pRoll
+                staggerCheck(target: &enemy)
+            } else if (pRoll < eRoll) {
+                tempECard.name.removeFirst()
+                tempPCard.dice.removeFirst()
+                enemy.stagger=max(enemy.maxStagger, enemy.stagger+eRoll)
+            } else {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+            }
+        }
+        
+        
+        ///player evade
+        else if (tempPDice.type == .evade && tempEDice.type == .atk) {
+            if (pRoll >= eRoll) {
+                tempECard.dice.removeFirst()
+                player.stagger = min(player.maxStagger, player.stagger+pRoll)
+            } else if (pRoll < eRoll) {
+                tempECard.name.removeFirst()
+                tempPCard.dice.removeFirst()
+                attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
+            }
+        } else if (tempPDice.type == .evade && tempEDice.type == .block) {
+            if (pRoll > eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                player.stagger=max(player.maxStagger, player.stagger+pRoll)
+            } else if (pRoll < eRoll) {
+                tempECard.name.removeFirst()
+                tempPCard.dice.removeFirst()
+                player.stagger-=eRoll
+                staggerCheck(target: &player)
+            } else {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+            }
+        } else if (tempPDice.type == .evade && tempEDice.type == .evade) {
+            tempECard.dice.removeFirst()
+            tempPCard.dice.removeFirst()
+        }
+    }
+    
+    
+    //checks for remaining dice after the clash removes them
+    while (!tempPCard.dice.isEmpty) {
+        StatusManager.triggerBleedStatus(on: &player)
+        
+        var tempPDice = tempPCard.dice.first!
+        
+        var pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
+        
+        attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+        tempPCard.dice.removeFirst()
+    }
+    
+    while (!tempECard.dice.isEmpty) {
+        StatusManager.triggerBleedStatus(on: &enemy)
+        
+        var tempEDice = tempPCard.dice.first!
+        
+        var eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
+        
+        attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
+        tempECard.dice.removeFirst()
     }
 
 }
@@ -293,7 +385,8 @@ func rollAllSpeedDice(for nugget: Nugget) -> [Int] {
 }
 
 private func staggerCheck(target: inout Nugget) {
-    if (target.stagger == 0) {
+    if (target.stagger <= 0) {
         target.isStaggered = true
+        target.stagger = 0
     }
 }
