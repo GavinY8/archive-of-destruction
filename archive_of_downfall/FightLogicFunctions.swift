@@ -25,6 +25,20 @@ func turnEnd(player: inout Nugget, enemy: inout Nugget) {
     StatusManager.triggerSceneEndStatuses(on: &enemy)
 }
 
+func tryClash(player: inout Nugget, target: inout Nugget, playerCard: Card, enemyCard: Card) {
+    var playerSpeed = Int.random(in: player.speedDice[0].min...player.speedDice[0].max)
+    var enemySpeed = Int.random(in: target.speedDice[0].min...target.speedDice[0].max)
+    
+    if playerSpeed > enemySpeed {
+        let newClash = ClashAction(
+            player: player.name,
+            target: target.name,
+            playerCard: playerCard,
+            enemyCard: enemyCard
+        )
+    }
+}
+
 ///we need another function to check for if a clash even occurs, but i think this clash is done
 func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCard: Card) {
     var tempP = player
@@ -244,8 +258,6 @@ func unopposedAttack(attacker: inout Nugget, defender: inout Nugget, chosenCard:
     
     // 5. Extract the modified card out of the processed isolated speed slot
     var processedCard = mockAttacker.speedDice[0].assignedCard!
-    
-    print("\n💥 UNOPPOSED ATTACK: \(attacker.name) uses pre-calculated [\(processedCard.name)]")
     
     // 6. Run your dice queue processing loop
     while !processedCard.dice.isEmpty {

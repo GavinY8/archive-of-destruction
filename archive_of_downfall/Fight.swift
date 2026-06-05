@@ -6,6 +6,8 @@
 //
 import Foundation
 
+var clashQueue: [Card] = []
+
 //var startChar = Nugget(
 //    name: "default",
 //    hp: 30,
