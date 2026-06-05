@@ -25,37 +25,118 @@ func turnEnd(player: inout Nugget, enemy: inout Nugget) {
     StatusManager.triggerSceneEndStatuses(on: &enemy)
 }
 
-func clash(player: inout Nugget, enemy: inout Nugget) {
-    // 1. Both units choose a card from their hand
-    guard var playerCard = chooseCard(unit: &player, strategy: "highest_cost"),
-          var enemyCard = chooseCard(unit: &enemy, strategy: "highest_cost") else {
-        print("Clash aborted: One or both units couldn't play a card.")
-        return
-    }
+func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCard: Card) {
+    var tempP = player
+    var tempE = enemy
+    var tempPCard = playerCard
+    var tempECard = enemyCard
     
-    // 2. Loop while BOTH cards still have combat dice left to clash with
-    while !playerCard.dice.isEmpty && !enemyCard.dice.isEmpty {
-        // Remove the first die from each card's queue
-        let playerDie = playerCard.dice.removeFirst()
-        let enemyDie = enemyCard.dice.removeFirst()
+    //i think this only triggers once because it affects all dice, if in the loop it'll keep adding power(i think)
+    StatusManager.triggerAttackStartStatuses(on: &tempP)
+    StatusManager.triggerAttackStartStatuses(on: &tempE)
+    
+    while (!tempPCard.dice.isEmpty && !tempECard.dice.isEmpty && !player.isStaggered && !enemy.isStaggered) {
+        StatusManager.triggerBleedStatus(on: &player)
+        StatusManager.triggerBleedStatus(on: &enemy)
         
-        // Roll the dice
-        let playerRoll = roll(min: playerDie.minRoll, max: playerDie.maxRoll)
-        let enemyRoll = roll(min: enemyDie.minRoll, max: enemyDie.maxRoll)
+        var tempPDice = tempPCard.dice.first!
+        var tempEDice = tempECard.dice.first!
+
         
-        print("🎲 \(player.name) rolled \(playerRoll) (\(playerDie.type)) vs \(enemy.name) rolled \(enemyRoll) (\(enemyDie.type))")
-        // Add your Evade/Block logic checks down here...
+        var pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
+        var eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
+        
+        //check dice type here haha funny 300000000 line code
+        if (tempPDice.type == .atk && tempEDice.type == .atk) {
+            if (pRoll > eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+            } else if (pRoll < eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
+            } else {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+            }
+        } else if (tempPDice.type == .atk && tempEDice.type == .block) {
+            if (pRoll > eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                pRoll -= eRoll
+                attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+            } else if (pRoll <= eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                player.stagger-=(eRoll-pRoll)
+            }
+        } else if (tempPDice.type == .atk && tempEDice.type == .evade) {
+            if (pRoll > eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+            } else if (pRoll <= eRoll) {
+                tempPCard.dice.removeFirst()
+                enemy.stagger+=eRoll
+            }
+        } else if (tempPDice.type == .block && tempEDice.type == .atk) {
+            if (pRoll >= eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                enemy.stagger-=(pRoll-eRoll)
+            } else if (pRoll < eRoll) {
+                tempECard.dice.removeFirst()
+                tempPCard.dice.removeFirst()
+                attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
+            }
+        } else if ()
     }
-    
-    
+
 }
+
+//func clash(player: inout Nugget, enemy: inout Nugget) {
+//    // 1. Both units choose a card from their hand
+//    guard var playerCard = chooseCard(unit: &player, strategy: "highest_cost"),
+//          var enemyCard = chooseCard(unit: &enemy, strategy: "highest_cost") else {
+//        print("Clash aborted: One or both units couldn't play a card.")
+//        return
+//    }
+//    
+//    // 2. Loop while BOTH cards still have combat dice left to clash with
+//    while !playerCard.dice.isEmpty && !enemyCard.dice.isEmpty {
+//        // Remove the first die from each card's queue
+//        let playerDie = playerCard.dice.removeFirst()
+//        let enemyDie = enemyCard.dice.removeFirst()
+//        
+//        // Roll the dice
+//        let playerRoll = roll(min: playerDie.minRoll, max: playerDie.maxRoll)
+//        let enemyRoll = roll(min: enemyDie.minRoll, max: enemyDie.maxRoll)
+//        
+//        print("🎲 \(player.name) rolled \(playerRoll) (\(playerDie.type)) vs \(enemy.name) rolled \(enemyRoll) (\(enemyDie.type))")
+//        // Add your Evade/Block logic checks down here...
+//    }
+//    
+//    
+//}
 
 
 func roll(min: Int, max: Int) -> Int {
     return Int.random(in: min...max)
 }
 
-func attack(attacker: inout Nugget, defender: inout Nugget, chosenCard: Card) {
+
+func attack(attacker: inout Nugget, defender: inout Nugget, chosenDice: Dice, diceRoll: Int) {
+    let (hpDmg, staggerDmg) = calculateDamage(baseRoll: diceRoll, type: chosenDice.atkType, target: defender)
+    
+    defender.hp = max(0, defender.hp - hpDmg)
+    defender.stagger = max(0, defender.stagger - staggerDmg)
+    
+    staggerCheck(target: &defender)
+}
+
+///ignore this, don't use this for attack after clash because it assumes all dice of a card are there
+func unopposedAttack(attacker: inout Nugget, defender: inout Nugget, chosenCard: Card) {
     // 1. Create a deep local copy of the card so mutations do not ruin your deck/hand blueprints
     let temporaryCardCopy = chosenCard
     
@@ -111,6 +192,7 @@ func attack(attacker: inout Nugget, defender: inout Nugget, chosenCard: Card) {
         }
     }
 }
+
 
 private func calculateDamage(baseRoll: Int, type: AtkType?, target: Nugget) -> (healthDamage: Int, staggerDamage: Int) {
     guard let type = type else { return (baseRoll, baseRoll) }
@@ -210,3 +292,8 @@ func rollAllSpeedDice(for nugget: Nugget) -> [Int] {
     return rolledResults
 }
 
+private func staggerCheck(target: inout Nugget) {
+    if (target.stagger == 0) {
+        target.isStaggered = true
+    }
+}
