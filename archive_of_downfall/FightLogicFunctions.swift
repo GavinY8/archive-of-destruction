@@ -150,7 +150,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 tempECard.dice.removeFirst()
                 player.stagger = min(player.page.maxStagger, player.stagger+pRoll)
             } else if (pRoll < eRoll) {
-                tempECard.name.removeFirst()
+                tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
                 attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
             }
@@ -399,5 +399,14 @@ private func staggerCheck(target: inout Nugget) {
     if (target.stagger <= 0) {
         target.isStaggered = true
         target.stagger = 0
+    }
+}
+
+func drawCards(nugget: inout Nugget, count: Int) {
+    var deck = Deck()
+    for _ in 0..<count {
+        if let card = deck.drawCard(from: &nugget.deck, discard: &nugget.discard) {
+            nugget.hand.append(card)
+        }
     }
 }

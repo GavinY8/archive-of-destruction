@@ -66,9 +66,13 @@ struct FightScreen: View {
                 Group {
                     switch phase {
                     case .cardAssignment(let slotIndex):
-                        HandView(nugget: player) { card in
-                            assignCard(card, toSlot: slotIndex)
-                        }
+                        HandView(
+                            nugget: player,
+                            assignedCardNames: Set(assignedCards.values.map(\.name)),  // ← add
+                            onCardSelected: { card in
+                                assignCard(card, toSlot: slotIndex)
+                            }
+                        )
                     case .confirmation:
                         ConfirmationPanel(
                             assignedCards: assignedCards,
@@ -91,6 +95,10 @@ struct FightScreen: View {
                 }
                 .frame(maxHeight: .infinity)
             }
+            .onAppear {
+                    drawCards(nugget: &player, count: 5)
+                    drawCards(nugget: &enemy, count: 5)
+                }
         }
     }
 
@@ -103,6 +111,11 @@ struct FightScreen: View {
 
     func assignCard(_ card: Card, toSlot slot: Int) {
         assignedCards[slot] = card
+        
+        // Remove card from hand and deduct light
+        player.hand.removeAll { $0.id == card.id }
+        player.light -= card.cost
+        
         let nextSlot = slot + 1
         if nextSlot < totalSlots {
             phase = .cardAssignment(slotIndex: nextSlot)
@@ -122,6 +135,7 @@ struct FightScreen: View {
     func advanceTurn() {
         turnStart(player: &player, enemy: &enemy)
         assignedCards = [:]
+        drawCards(nugget: &player, count: 1)  // or however many per turn
         phase = .cardAssignment(slotIndex: 0)
     }
 

@@ -72,11 +72,11 @@ struct SpeedDice {
 }
 
 struct Card {
+    var id: UUID = UUID()
     var name: String
     var cost: Int
     var dice: [Dice]
 }
-
 struct Dice {
     var minRoll: Int
     var maxRoll: Int

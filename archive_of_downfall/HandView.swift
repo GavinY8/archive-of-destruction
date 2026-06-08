@@ -7,13 +7,16 @@ import SwiftUI
 
 struct HandView: View {
     let nugget: Nugget
+    let assignedCardNames: Set<String>   // ← add this
     let onCardSelected: (Card) -> Void
+
 
     @State private var selectedIndex: Int? = nil
     @State private var appeared = false
 
-    var affordableCards: [Card] {
-        nugget.hand.filter { $0.cost <= nugget.light }
+    var displayableCards: [Card] {
+        nugget.hand.filter { !assignedCardNames.contains($0.name) }
+        // no longer filtering by cost here
     }
 
     var body: some View {
@@ -35,8 +38,8 @@ struct HandView: View {
 
             // Card fan
             ZStack {
-                ForEach(Array(nugget.hand.enumerated()), id: \.offset) { index, card in
-                    let total = nugget.hand.count
+                ForEach(Array(displayableCards.enumerated()), id: \.offset) { index, card in
+                    let total = displayableCards.count
                     let mid = Double(total - 1) / 2.0
                     let offset = Double(index) - mid
                     let isSelected = selectedIndex == index
@@ -52,13 +55,12 @@ struct HandView: View {
                         .scaleEffect(isSelected ? 1.08 : 1.0)
                         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
                         .onTapGesture {
-                            guard isAffordable else { return }
                             if selectedIndex == index {
-                                // Double-tap confirms
+                                guard isAffordable else { return }  // block confirm, not selection
                                 onCardSelected(card)
                                 selectedIndex = nil
                             } else {
-                                selectedIndex = index
+                                selectedIndex = index  // always allow selecting to inspect
                             }
                         }
                         .opacity(appeared ? 1 : 0)
@@ -74,13 +76,15 @@ struct HandView: View {
 
             // Confirm button
             if let idx = selectedIndex {
-                let card = nugget.hand[idx]
-                ConfirmButton(card: card) {
-                    onCardSelected(card)
-                    selectedIndex = nil
+                let card = displayableCards[idx]
+                if card.cost <= nugget.light {          // ← add this guard
+                    ConfirmButton(card: card) {
+                        onCardSelected(card)
+                        selectedIndex = nil
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 8)
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .padding(.bottom, 8)
             }
         }
         .onAppear { appeared = true }
@@ -101,12 +105,7 @@ struct CardView: View {
                 .fill(Color(red: 0.13, green: 0.11, blue: 0.09))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .strokeBorder(
-                            isSelected
-                                ? Color(red: 0.85, green: 0.75, blue: 0.5)
-                                : Color(red: 0.35, green: 0.3, blue: 0.25),
-                            lineWidth: isSelected ? 1.5 : 1
-                        )
+                        .fill(Color.black.opacity(isAffordable ? 0 : 0.45))
                 )
                 .shadow(color: isSelected ? Color(red: 0.85, green: 0.75, blue: 0.5).opacity(0.4) : .black.opacity(0.5), radius: isSelected ? 12 : 6)
 
