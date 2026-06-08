@@ -97,7 +97,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
             } else if (pRoll <= eRoll) {
                 tempPCard.dice.removeFirst()
-                enemy.stagger = min(enemy.maxStagger, enemy.stagger+eRoll)
+                enemy.stagger = min(enemy.page.maxStagger, enemy.stagger+eRoll)
             }
         }
         
@@ -138,7 +138,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
             } else if (pRoll < eRoll) {
                 tempECard.name.removeFirst()
                 tempPCard.dice.removeFirst()
-                enemy.stagger=max(enemy.maxStagger, enemy.stagger+eRoll)
+                enemy.stagger=max(enemy.page.maxStagger, enemy.stagger+eRoll)
             } else {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -150,7 +150,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         else if (tempPDice.type == .evade && tempEDice.type == .atk) {
             if (pRoll >= eRoll) {
                 tempECard.dice.removeFirst()
-                player.stagger = min(player.maxStagger, player.stagger+pRoll)
+                player.stagger = min(player.page.maxStagger, player.stagger+pRoll)
             } else if (pRoll < eRoll) {
                 tempECard.name.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -160,7 +160,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
             if (pRoll > eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
-                player.stagger=max(player.maxStagger, player.stagger+pRoll)
+                player.stagger=max(player.page.maxStagger, player.stagger+pRoll)
             } else if (pRoll < eRoll) {
                 tempECard.name.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -320,14 +320,14 @@ private func calculateDamage(baseRoll: Int, type: AtkType?, target: Nugget) -> (
     
     switch type {
     case .slash:
-        healthMultiplier = target.slash
-        staggerMultiplier = target.staggerSlash
+        healthMultiplier = target.page.slash
+        staggerMultiplier = target.page.staggerSlash
     case .pierce:
-        healthMultiplier = target.pierce
-        staggerMultiplier = target.staggerPierce
+        healthMultiplier = target.page.pierce
+        staggerMultiplier = target.page.staggerPierce
     case .blunt:
-        healthMultiplier = target.blunt
-        staggerMultiplier = target.staggerBlunt
+        healthMultiplier = target.page.blunt
+        staggerMultiplier = target.page.staggerBlunt
     }
     
     // 4. Multiply modified base damage by weaknesses and round
@@ -375,7 +375,7 @@ func chooseCard(unit: inout Nugget, strategy: String = "highest_cost") -> Card? 
 private func handleStaggerRecovery(target: inout Nugget) {
     if target.isStaggered {
         target.isStaggered = false
-        target.stagger = target.maxStagger // Fully restore the stagger pool
+        target.stagger = target.page.maxStagger // Fully restore the stagger pool
         print("🛡️ \(target.name) has recovered from Stagger!")
     }
 }

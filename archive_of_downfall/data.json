@@ -6,5 +6,27 @@
     "story1": [
         {"name": "Narrator", "text": "Once upon a time in Xcode..."},
         {"name": "Hero", "text": "I will fix this bug!"}
+    ],
+    "game_tutorial": [
+        {"name": "", "text": "\n“At the end of every civilization, the Archive arrives.\n”"},
+        {"name": "???", "text": "Wake up, Executioner. We have visitors."},
+        {"name": "You", "text": "Ugh… My head… I still haven't recovered fully from the last mission."},
+        {"name": "You", "text": "Hello, Senior Archivist Miller. What flavor of visitors do we have on our hands?"},
+        {"name": "Sr. Archivist Miller", "text": "As you know, there are only 2 types of people who seek out the Archive. People whose world has not yet been archived, desperate for knowledge of when their world will, and people whose world has already met its end. This one is the latter."},
+        {"name": "You", "text": "I'm guessing they're the violent type?"},
+        {"name": "Sr. Archivist Miller", "text": "Precisely."},
+        {"name": "You", "text": "Well, Senior Archivist, I'm gonna need your assistance with this one. My motor skills and mind are in shambles after that last mission."},
+        {"name": "Sr. Archivist Miller", "text": "Fine, but follow exactly what I say."},
+        {"name": "You", "text": "Alright! Let's do this." },
+        {"name": "Sr. Archivist Miller", "text": "Attention. It seems we are facing off against a Gooney."},
+        {"name": "You", "text": "Gooney? Man, they really need to come up with better names."},
+        {"name": "Sr. Archivist Miller", "text": "You can see your available cards at the bottom. Most cards cost energy. It's the number in the yellow circle. Your energy is located above your head. You gain 1 energy every turn."},
+        {"name": "You", "text": "Yeah, yeah, I know."},
+        {"name": "Sr. Archivist Miller", "text": "Why did you ask me to help then?"},
+        {"name": "You", "text": "Memory doesn't come easily with concussions, y'know."},
+        {"name": "Sr. Archivist Miller", "text":  "Hmm… alright. Your deck is at the bottom right. You draw a new card from your deck at the start of your turn."},
+        {"name": "You", "text": "What's that icon in the top corner?"},
+        {"name": "Sr. Archivist Miller", "text": "Right, I almost forgot."},
+        {"name": "Sr. Archivist Miller", "text": "Your cards have different damage types. Some enemies have weaknesses to certain damage types, choose wisely when fighting."},
     ]
 }

@@ -9,12 +9,29 @@ import Foundation
 struct Nugget {
     var name: String
     
+    var page: Page
+    
     var hp: Int
-    var maxhp: Int
     var stagger: Int
-    var maxStagger: Int
+    
     var light: Int
     var maxLight: Int
+    
+    var deck: [Card]
+    var hand: [Card]
+    var discard: [Card]
+    
+    var speedDice: [SpeedDice]
+    
+    var statuses: [Status]
+    
+    var isStaggered: Bool = false
+}
+
+struct Page {
+    var maxhp: Int
+    var maxStagger: Int
+
     var speedDice: [SpeedDice]
     
     var slash: Double
@@ -24,14 +41,6 @@ struct Nugget {
     var staggerSlash: Double
     var staggerPierce: Double
     var staggerBlunt: Double
-    
-    var deck: [Card]
-    var hand: [Card]
-    var discard: [Card]
-    
-    var statuses: [Status]
-    
-    var isStaggered: Bool = false
 }
 
 struct SpeedDice {
