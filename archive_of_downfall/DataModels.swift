@@ -21,7 +21,6 @@ struct Nugget {
     var hand: [Card]
     var discard: [Card]
     
-    var speedDice: [SpeedDice]
     
     var statuses: [Status]
     
@@ -31,7 +30,6 @@ struct Nugget {
 struct Page {
     var maxhp: Int
     var maxStagger: Int
-
     var speedDice: [SpeedDice]
     
     var slash: Double
@@ -41,7 +39,31 @@ struct Page {
     var staggerSlash: Double
     var staggerPierce: Double
     var staggerBlunt: Double
+
+    // Custom initializer with implicit parameters (_)
+    init(
+        _ maxhp: Int,
+        _ maxStagger: Int,
+        _ speedDice: [SpeedDice],
+        _ slash: Double,
+        _ pierce: Double,
+        _ blunt: Double,
+        _ staggerSlash: Double,
+        _ staggerPierce: Double,
+        _ staggerBlunt: Double
+    ) {
+        self.maxhp = maxhp
+        self.maxStagger = maxStagger
+        self.speedDice = speedDice
+        self.slash = slash
+        self.pierce = pierce
+        self.blunt = blunt
+        self.staggerSlash = staggerSlash
+        self.staggerPierce = staggerPierce
+        self.staggerBlunt = staggerBlunt
+    }
 }
+
 
 struct SpeedDice {
     var min: Int
@@ -60,6 +82,14 @@ struct Dice {
     var maxRoll: Int
     var type: DiceType
     var atkType: AtkType? = nil
+    var onHit: [DiceEffect] = []   // ← add this
+}
+
+enum DiceEffect {
+    case inflict(StatusType, stacks: Int)
+    case heal(Int)
+    case draw(Int)
+    case gainLight(Int)
 }
 
 enum AtkType {
@@ -80,12 +110,25 @@ struct Status {
 }
 
 struct Deck {
-    private var drawPile: [Card] = []
+    var drawPile: [Card] = []
     
-    mutating func drawCard(from originalDeck: [Card]) -> Card {
+    // Changing 'from' to an 'inout' parameter allows this function
+    // to modify the Nugget's actual deck and discard lists directly.
+    mutating func drawCard(from deck: inout [Card], discard: inout [Card]) -> Card? {
+        // Guard against an entirely empty deck setup
+        if drawPile.isEmpty && deck.isEmpty && discard.isEmpty { return nil }
+        
         if drawPile.isEmpty {
-            drawPile = originalDeck.shuffled()
+            // If draw pile is empty, recycle the discard pile back into the deck
+            if deck.isEmpty {
+                drawPile = discard.shuffled()
+                discard.removeAll()
+            } else {
+                drawPile = deck.shuffled()
+            }
         }
-        return drawPile.removeFirst()
+        
+        // Remove and return the top card safely
+        return drawPile.isEmpty ? nil : drawPile.removeFirst()
     }
 }

@@ -41,8 +41,8 @@ struct StatusManager {
             let disarm = getStacks(of: .disarm, on: nugget)
             let paralysis = getStacks(of: .paralysis, on: nugget)
             
-            for i in 0..<nugget.speedDice.count {
-                guard var assignedCard = nugget.speedDice[i].assignedCard else { continue }
+        for i in 0..<nugget.page.speedDice.count {
+            guard var assignedCard = nugget.page.speedDice[i].assignedCard else { continue }
                 
                 // 1. Identify which dice slots get paralyzed without touching the base collection order
                 let diceCount = assignedCard.dice.count
@@ -72,7 +72,7 @@ struct StatusManager {
                     
                     assignedCard.dice[j] = die
                 }
-                nugget.speedDice[i].assignedCard = assignedCard
+            nugget.page.speedDice[i].assignedCard = assignedCard
             }
         }
     

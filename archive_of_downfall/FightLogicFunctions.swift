@@ -25,10 +25,7 @@ func turnEnd(player: inout Nugget, enemy: inout Nugget) {
     StatusManager.triggerSceneEndStatuses(on: &enemy)
 }
 
-func tryClash(player: inout Nugget, target: inout Nugget, playerCard: Card, enemyCard: Card) {
-    var playerSpeed = Int.random(in: player.speedDice[0].min...player.speedDice[0].max)
-    var enemySpeed = Int.random(in: target.speedDice[0].min...target.speedDice[0].max)
-    
+func tryClash(player: inout Nugget, target: inout Nugget, playerSpeed: Int, enemySpeed: Int,playerCard: Card, enemyCard: Card) {
     if playerSpeed > enemySpeed {
         let newClash = ClashAction(
             player: player.name,
@@ -42,13 +39,14 @@ func tryClash(player: inout Nugget, target: inout Nugget, playerCard: Card, enem
 ///we need another function to check for if a clash even occurs, but i think this clash is done
 func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCard: Card) {
     var tempP = player
-    var tempE = enemy
-    var tempPCard = playerCard
-    var tempECard = enemyCard
-    
-    //i think this only triggers once because it affects all dice, if in the loop it'll keep adding power(i think)
+    tempP.page.speedDice = [SpeedDice(min: 1, max: 1, assignedCard: playerCard)]
     StatusManager.triggerAttackStartStatuses(on: &tempP)
-    StatusManager.triggerAttackStartStatuses(on: &tempE)
+    var tempPCard = tempP.page.speedDice[0].assignedCard!
+    var tempE = enemy
+    tempE.page.speedDice = [SpeedDice(min: 1, max: 1, assignedCard: enemyCard)]  
+    StatusManager.triggerAttackStartStatuses(on: &tempE)                          
+    var tempECard = tempE.page.speedDice[0].assignedCard!
+
     
     while (!tempPCard.dice.isEmpty && !tempECard.dice.isEmpty && !player.isStaggered && !enemy.isStaggered) {
         StatusManager.triggerBleedStatus(on: &player)
@@ -136,9 +134,9 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 enemy.stagger-=pRoll
                 staggerCheck(target: &enemy)
             } else if (pRoll < eRoll) {
-                tempECard.name.removeFirst()
+                tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
-                enemy.stagger=max(enemy.page.maxStagger, enemy.stagger+eRoll)
+                enemy.stagger = min(enemy.page.maxStagger, enemy.stagger + eRoll)
             } else {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -162,7 +160,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 tempPCard.dice.removeFirst()
                 player.stagger=max(player.page.maxStagger, player.stagger+pRoll)
             } else if (pRoll < eRoll) {
-                tempECard.name.removeFirst()
+                tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
                 player.stagger-=eRoll
                 staggerCheck(target: &player)
@@ -192,7 +190,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
     while (!tempECard.dice.isEmpty) {
         StatusManager.triggerBleedStatus(on: &enemy)
         
-        let tempEDice = tempPCard.dice.first!
+        let tempEDice = tempECard.dice.first!
         
         let eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
         
@@ -252,13 +250,13 @@ func unopposedAttack(attacker: inout Nugget, defender: inout Nugget, chosenCard:
     
     // 3. Create a mock nugget container to isolate modifications safely
     var mockAttacker = attacker
-    mockAttacker.speedDice = [temporarySpeedDie]
+    mockAttacker.page.speedDice = [temporarySpeedDie]
     
     // 4. Run your exact status preparation method safely on the mock target
     StatusManager.triggerAttackStartStatuses(on: &mockAttacker)
     
     // 5. Extract the modified card out of the processed isolated speed slot
-    var processedCard = mockAttacker.speedDice[0].assignedCard!
+    var processedCard = mockAttacker.page.speedDice[0].assignedCard!
     
     // 6. Run your dice queue processing loop
     while !processedCard.dice.isEmpty {
@@ -386,7 +384,7 @@ func rollAllSpeedDice(for nugget: Nugget) -> [Int] {
     let haste = StatusManager.getStacks(of: .haste, on: nugget)
     let bind = StatusManager.getStacks(of: .bind, on: nugget)
     
-    for baseDie in nugget.speedDice {
+    for baseDie in nugget.page.speedDice {
         let finalMin = max(1, baseDie.min + haste - bind)
         let finalMax = max(1, baseDie.max + haste - bind)
         
