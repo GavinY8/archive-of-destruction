@@ -4,9 +4,9 @@
         {"name": "Student", "text": "Thanks! I am ready to learn."}
     ],
     "story1": [
-        {"name": "", "text": "\n“At the end of every civilization, the Archive arrives.\n”"},
+        {"name": "", "text": "\"At the end of every civilization, the Archive arrives.\""},
         {"name": "???", "text": "Wake up, Executioner. We have visitors."},
-        {"name": "You", "text": "Ugh… My head… I still haven't recovered fully from the last mission."},
+        {"name": "You", "text": "(Ugh… My head… I still haven't recovered fully from the last mission)."},
         {"name": "You", "text": "Hello, Senior Archivist Miller. What flavor of visitors do we have on our hands?"},
         {"name": "Sr. Archivist Miller", "text": "As you know, there are only 2 types of people who seek out the Archive. People whose world has not yet been archived, desperate for knowledge of when their world will, and people whose world has already met its end. This one is the latter."},
         {"name": "You", "text": "I'm guessing they're the violent type?"},

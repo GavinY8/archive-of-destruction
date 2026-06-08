@@ -65,7 +65,7 @@ struct VisualNovelTextBoxView: View {
                             Image(systemName: "clock.arrow.circlepath")
                             Text("Log")
                         }
-                        .font(.subheadline)
+                        .font(.system(size: 12))
                         .fontWeight(.bold)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 14)
@@ -83,16 +83,19 @@ struct VisualNovelTextBoxView: View {
                         Text(script[currentLineIndex].speaker)
                             .font(.headline)
                             .foregroundColor(.white)
-                            .rotationEffect(.degrees(-30))
+                            .rotationEffect(.degrees(-15))
                             .offset(x: -20, y: -20)
                             .padding(.top, 30)
                         
                         conditionalDialogue
                             .font(.body)
                             .foregroundColor(.white)
+                            .fixedSize(horizontal: false, vertical: true)
                             .multilineTextAlignment(.leading)
+                            .lineLimit(nil)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                             .offset(x: 30, y: -20)
+                            .padding(.trailing)
                     } else {
                         Text(script.isEmpty ? "Loading Story..." : "Story Finished")
                             .font(.headline)
