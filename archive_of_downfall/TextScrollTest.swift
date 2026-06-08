@@ -13,6 +13,7 @@ struct Dialogue: Decodable {
 struct StoryData: Decodable {
     let tutorial: [Dialogue]
     let story1: [Dialogue]
+    let game_tutorial: [Dialogue]
 }
 
 struct VisualNovelTextBoxView: View {
@@ -135,6 +136,8 @@ struct VisualNovelTextBoxView: View {
                 chosenDialogue = decodedData.tutorial
             case "story1":
                 chosenDialogue = decodedData.story1
+            case "game_tutorial":
+                chosenDialogue = decodedData.game_tutorial
             default:
                 return
             }
