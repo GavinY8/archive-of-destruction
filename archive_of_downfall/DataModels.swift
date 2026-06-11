@@ -109,6 +109,21 @@ struct Status {
     var stacks: Int
 }
 
+enum CombatEventType {
+    case roll
+    case damage
+}
+
+struct CombatEvent {
+    let type: CombatEventType
+    let actorName: String
+    let cardName: String
+    let dieIndex: Int
+    let roll: Int?          // for .roll
+    let hpDamage: Int?      // for .damage
+    let staggerDamage: Int? // for .damage
+}
+
 struct Deck {
     var drawPile: [Card] = []
     

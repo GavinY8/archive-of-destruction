@@ -22,6 +22,9 @@ struct FightScreen: View {
     @State var phase: CombatPhase = .cardAssignment(slotIndex: 0)
     @State var assignedCards: [Int: Card] = [:]
     @State var log: [String] = []
+    @State private var combatEvents: [CombatEvent] = []
+    @State private var currentEventIndex: Int = 0
+    @State private var isReplayingEvents = false
 
     var totalSlots: Int { player.page.speedDice.count }
 
@@ -66,13 +69,29 @@ struct FightScreen: View {
                 Group {
                     switch phase {
                     case .cardAssignment(let slotIndex):
-                        HandView(
-                            nugget: player,
-                            assignedCardNames: Set(assignedCards.values.map(\.name)),  // ← add
-                            onCardSelected: { card in
-                                assignCard(card, toSlot: slotIndex)
+                        ZStack(alignment: .bottomTrailing) {
+                            HandView(
+                                nugget: player,
+                                assignedCardNames: Set(assignedCards.values.map(\.name)),
+                                onCardSelected: { card in
+                                    assignCard(card, toSlot: slotIndex)
+                                }
+                            )
+
+                            Button {
+                                endTurnWithoutMoreCards()
+                            } label: {
+                                Text("END TURN")
+                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                    .foregroundColor(Color(red: 0.08, green: 0.07, blue: 0.06))
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 8)
+                                    .background(Color(red: 0.7, green: 0.65, blue: 0.5))
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
                             }
-                        )
+                            .padding(.trailing, 24)
+                            .padding(.bottom, 24)
+                        }
                     case .confirmation:
                         ConfirmationPanel(
                             assignedCards: assignedCards,
@@ -113,7 +132,9 @@ struct FightScreen: View {
         assignedCards[slot] = card
         
         // Remove card from hand and deduct light
-        player.hand.removeAll { $0.id == card.id }
+        if let index = player.hand.firstIndex(where: { $0.id == card.id }) {
+            player.hand.remove(at: index)
+        }
         player.light -= card.cost
         
         let nextSlot = slot + 1
@@ -126,10 +147,46 @@ struct FightScreen: View {
 
     func startResolution() {
         phase = .resolving
-        // Wire into your clash logic here:
-        // for each slot, build ClashAction, push to ClashQueueManager, resolve
-        // then:
-        phase = .turnEnd
+        combatEvents = []
+        currentEventIndex = 0
+
+        // Example: one clash using assignedCards[0]
+        if let pCard = assignedCards[0],
+           let eCard = chooseCard(unit: &enemy, strategy: "highest_cost") {
+
+            clash(player: &player,
+                  enemy: &enemy,
+                  playerCard: pCard,
+                  enemyCard: eCard,
+                  events: &combatEvents)
+        }
+
+        // Now replay events slowly into the UI
+        isReplayingEvents = true
+        Task {
+            for i in 0..<combatEvents.count {
+                currentEventIndex = i
+                appendEventToLog(combatEvents[i])
+                try? await Task.sleep(nanoseconds: 600_000_000) // 0.6 sec per step
+            }
+
+            isReplayingEvents = false
+            turnEnd(player: &player, enemy: &enemy)
+            phase = .turnEnd
+        }
+    }
+    
+    func appendEventToLog(_ event: CombatEvent) {
+        switch event.type {
+        case .roll:
+            if let roll = event.roll {
+                log.append("\(event.actorName) rolls \(roll) with \(event.cardName)")
+            }
+        case .damage:
+            let hp = event.hpDamage ?? 0
+            let stg = event.staggerDamage ?? 0
+            log.append("\(event.actorName) deals \(hp) HP / \(stg) STG")
+        }
     }
 
     func advanceTurn() {
@@ -137,6 +194,14 @@ struct FightScreen: View {
         assignedCards = [:]
         drawCards(nugget: &player, count: 1)  // or however many per turn
         phase = .cardAssignment(slotIndex: 0)
+    }
+    
+    func endTurnWithoutMoreCards() {
+        // Option A: still show the confirmation panel
+        phase = .confirmation
+
+        // Option B: skip confirmation and immediately resolve
+        // startResolution()
     }
 
     // Subtle noise texture overlay
@@ -540,6 +605,7 @@ struct TurnEndView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
+
 
 #Preview(traits: .landscapeLeft) {
     FightScreen(player: Nugget( name: "player", page: Page(30, 15, [SpeedDice(min: 1, max: 4)], 1.0, 1.5, 2.0, 1.0, 1.5, 2.0), hp: 30, stagger: 15, light: 3, maxLight: 3, deck: CardDatabase.starterDeck, hand: [], discard: [], statuses: []), enemy: Nugget( name: "enemy", page: Page(30, 15, [SpeedDice(min: 1, max: 4), SpeedDice(min: 2, max: 5)], 1.0, 1.5, 2.0, 1.0, 1.5, 2.0), hp: 30, stagger: 15, light: 3, maxLight: 3, deck: CardDatabase.starterDeck, hand: [], discard: [], statuses: []))

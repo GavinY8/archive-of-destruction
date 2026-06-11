@@ -37,7 +37,7 @@ func tryClash(player: inout Nugget, target: inout Nugget, playerSpeed: Int, enem
 }
 
 ///we need another function to check for if a clash even occurs, but i think this clash is done
-func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCard: Card) {
+func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCard: Card, events: inout [CombatEvent]) {
     var tempP = player
     tempP.page.speedDice = [SpeedDice(min: 1, max: 1, assignedCard: playerCard)]
     StatusManager.triggerAttackStartStatuses(on: &tempP)
@@ -60,7 +60,17 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         var eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
         
         //check dice type here haha funny 300000000 line code
-        
+        events.append(
+                CombatEvent(
+                    type: .roll,
+                    actorName: player.name,
+                    cardName: playerCard.name,
+                    dieIndex: 0,    // or track which die this is
+                    roll: pRoll,
+                    hpDamage: nil,
+                    staggerDamage: nil
+                )
+            )
         
         ///player attack
         if (tempPDice.type == .atk && tempEDice.type == .atk) {
