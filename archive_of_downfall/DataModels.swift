@@ -113,6 +113,7 @@ struct Status {
 enum CombatEventType {
     case roll
     case damage
+    case staggerChange
 }
 
 struct CombatEvent {

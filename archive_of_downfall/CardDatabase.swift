@@ -13,7 +13,7 @@ struct CardDatabase {
         cost: 0,
         dice: [Dice(minRoll: 1, maxRoll: 4, type: .evade)]
     )
-    
+    static let block = Card (name: "block", cost: 0, dice: [Dice(minRoll: 100, maxRoll: 101, type: .block)])
     //1-Cost Cards
     static let lightAttack = Card(
         name: "Light Attack",
@@ -40,8 +40,8 @@ struct CardDatabase {
     
     //Starter Deck
     static let starterDeck: [Card] = [
-        evade, evade, evade,
-        lightAttack, lightAttack, lightAttack,
-        focusedStrikes, focusedStrikes, focusedStrikes
+        block, block, block,
+        lightAttack, lightAttack, block,
+        block, block, block
     ]
 }

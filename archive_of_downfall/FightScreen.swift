@@ -284,6 +284,14 @@ struct FightScreen: View {
             let hp = event.hpDamage ?? 0
             let stg = event.staggerDamage ?? 0
             log.append("\(event.actorName) deals \(hp) HP / \(stg) STG")
+        case .staggerChange:
+            let delta = event.staggerDamage ?? 0
+            if delta > 0 {
+                log.append("\(event.actorName)'s stagger increases by \(delta)")
+            } else if delta < 0 {
+                log.append("\(event.actorName)'s stagger decreases by \(-delta)")
+            }
+            
         }
     }
 

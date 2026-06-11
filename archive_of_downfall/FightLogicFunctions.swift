@@ -76,30 +76,69 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         
         var pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
         var eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
+        print(pRoll)
+        print(eRoll)
         
         //check dice type here haha funny 300000000 line code
         events.append(
-                CombatEvent(
-                    type: .roll,
-                    actorName: player.name,
-                    cardName: playerCard.name,
-                    dieIndex: 0,    // or track which die this is
-                    roll: pRoll,
-                    hpDamage: nil,
-                    staggerDamage: nil
-                )
+            CombatEvent(
+                type: .roll,
+                actorName: player.name,
+                cardName: playerCard.name,
+                dieIndex: 0,    // or track which die this is
+                roll: pRoll,
+                hpDamage: nil,
+                staggerDamage: nil
             )
+        )
+        events.append(
+            CombatEvent(
+                type: .roll,
+                actorName: enemy.name,
+                cardName: enemyCard.name,
+                dieIndex: 0,
+                roll: eRoll,
+                hpDamage: nil,
+                staggerDamage: nil
+            )
+        )
         
         ///player attack
         if (tempPDice.type == .atk && tempEDice.type == .atk) {
             if (pRoll > eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let (hp, stg) = calculateDamage(baseRoll: pRoll, type: tempPDice.atkType, target: enemy)
                 attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+                events.append(
+                    CombatEvent(
+                        type: .damage,
+                        actorName: player.name,
+                        cardName: playerCard.name,
+                        dieIndex: 0,
+                        roll: nil,
+                        hpDamage: hp,
+                        staggerDamage: stg
+                    )
+                )
+                
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
-                attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
+                let (hp, stg) = calculateDamage(baseRoll: pRoll, type: tempPDice.atkType, target: enemy)
+                attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+                events.append(
+                    CombatEvent(
+                        type: .damage,
+                        actorName: player.name,
+                        cardName: playerCard.name,
+                        dieIndex: 0,
+                        roll: nil,
+                        hpDamage: hp,
+                        staggerDamage: stg
+                    )
+                )
+                
             } else {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -109,21 +148,80 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
                 pRoll -= eRoll
+                let (hp, stg) = calculateDamage(baseRoll: pRoll, type: tempPDice.atkType, target: enemy)
                 attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+                events.append(
+                    CombatEvent(
+                        type: .damage,
+                        actorName: player.name,
+                        cardName: playerCard.name,
+                        dieIndex: 0,
+                        roll: nil,
+                        hpDamage: hp,
+                        staggerDamage: stg
+                    )
+                )
+                
             } else if (pRoll <= eRoll) {
+                print(pRoll)
+                print(eRoll)
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = player.stagger
                 player.stagger -= (eRoll-pRoll)
                 staggerCheck(target: &player)
+                let delta = player.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: player.name,
+                            cardName: playerCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             }
+            
         } else if (tempPDice.type == .atk && tempEDice.type == .evade) {
             if (pRoll > eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let (hp, stg) = calculateDamage(baseRoll: pRoll, type: tempPDice.atkType, target: enemy)
                 attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+                events.append(
+                    CombatEvent(
+                        type: .damage,
+                        actorName: player.name,
+                        cardName: playerCard.name,
+                        dieIndex: 0,
+                        roll: nil,
+                        hpDamage: hp,
+                        staggerDamage: stg
+                    )
+                )
+                
             } else if (pRoll <= eRoll) {
                 tempPCard.dice.removeFirst()
+                let before = enemy.stagger
                 enemy.stagger = min(enemy.page.maxStagger, enemy.stagger+eRoll)
+                let delta = enemy.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: enemy.name,
+                            cardName: enemyCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             }
         }
         
@@ -132,25 +230,82 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
             if (pRoll >= eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = enemy.stagger
                 enemy.stagger-=(pRoll-eRoll)
                 staggerCheck(target: &enemy)
+                let delta = enemy.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: enemy.name,
+                            cardName: enemyCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
                 eRoll-=pRoll
+                let (hp, stg) = calculateDamage(baseRoll: eRoll, type: tempEDice.atkType, target: player)
                 attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
+                events.append(
+                    CombatEvent(
+                        type: .damage,
+                        actorName: player.name,
+                        cardName: playerCard.name,
+                        dieIndex: 0,
+                        roll: nil,
+                        hpDamage: hp,
+                        staggerDamage: stg
+                    )
+                )
             }
         } else if (tempPDice.type == .block && tempEDice.type == .block) {
             if (pRoll > eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = enemy.stagger
                 enemy.stagger-=pRoll
                 staggerCheck(target: &enemy)
+                let delta = enemy.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: enemy.name,
+                            cardName: enemyCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = player.stagger
                 player.stagger-=eRoll
                 staggerCheck(target: &player)
+                let delta = player.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: enemy.name,
+                            cardName: enemyCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -159,12 +314,42 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
             if (pRoll > eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = enemy.stagger
                 enemy.stagger-=pRoll
                 staggerCheck(target: &enemy)
+                let delta = enemy.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: enemy.name,
+                            cardName: enemyCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = enemy.stagger
                 enemy.stagger = min(enemy.page.maxStagger, enemy.stagger + eRoll)
+                let delta = enemy.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: enemy.name,
+                            cardName: enemyCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -176,22 +361,78 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         else if (tempPDice.type == .evade && tempEDice.type == .atk) {
             if (pRoll >= eRoll) {
                 tempECard.dice.removeFirst()
+                let before = player.stagger
                 player.stagger = min(player.page.maxStagger, player.stagger+pRoll)
+                let delta = player.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: player.name,
+                            cardName: playerCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let (hp, stg) = calculateDamage(baseRoll: eRoll, type: tempEDice.atkType, target: player)
                 attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
-            }
+                events.append(
+                    CombatEvent(
+                        type: .damage,
+                        actorName: player.name,
+                        cardName: playerCard.name,
+                        dieIndex: 0,
+                        roll: nil,
+                        hpDamage: hp,
+                        staggerDamage: stg
+                    )
+                )            }
         } else if (tempPDice.type == .evade && tempEDice.type == .block) {
             if (pRoll > eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = player.stagger
                 player.stagger=max(player.page.maxStagger, player.stagger+pRoll)
+                let delta = player.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: player.name,
+                            cardName: playerCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
+                let before = player.stagger
                 player.stagger-=eRoll
                 staggerCheck(target: &player)
+                let delta = player.stagger - before   // usually negative
+                if delta != 0 {
+                    events.append(
+                        CombatEvent(
+                            type: .staggerChange,
+                            actorName: player.name,
+                            cardName: playerCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: nil,
+                            staggerDamage: delta
+                        )
+                    )
+                }
             } else {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
@@ -208,7 +449,19 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         StatusManager.triggerBleedStatus(on: &player)
         let tempPDice = tempPCard.dice.first!
         let pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
+        let (hp, stg) = calculateDamage(baseRoll: pRoll, type: tempPDice.atkType, target: enemy)
         attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+        events.append(
+            CombatEvent(
+                type: .damage,
+                actorName: player.name,
+                cardName: playerCard.name,
+                dieIndex: 0,
+                roll: nil,
+                hpDamage: hp,
+                staggerDamage: stg
+            )
+        )
         tempPCard.dice.removeFirst()
     }
 
@@ -216,7 +469,19 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         StatusManager.triggerBleedStatus(on: &enemy)
         let tempEDice = tempECard.dice.first!
         let eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
+        let (hp, stg) = calculateDamage(baseRoll: eRoll, type: tempEDice.atkType, target: player)
         attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
+        events.append(
+            CombatEvent(
+                type: .damage,
+                actorName: player.name,
+                cardName: playerCard.name,
+                dieIndex: 0,
+                roll: nil,
+                hpDamage: hp,
+                staggerDamage: stg
+            )
+        )
         tempECard.dice.removeFirst()
     }
 
