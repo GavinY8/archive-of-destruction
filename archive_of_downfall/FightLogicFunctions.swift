@@ -35,7 +35,7 @@ private func handleStaggerEnd(of nugget: inout Nugget) {
             // They just got staggered this turn: keep them staggered,
             // but clear the "just applied" marker so next turn they recover.
             nugget.staggerJustApplied = false
-        } else if nugget.hp > 0 {
+        } else if (nugget.hp > 0) {
             // They've already spent a full turn staggered → recover.
             nugget.isStaggered = false
             nugget.stagger = nugget.page.maxStagger

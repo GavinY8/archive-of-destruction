@@ -290,7 +290,12 @@ struct FightScreen: View {
     func advanceTurn() {
         turnStart(player: &player, enemy: &enemy)
         assignedCards = [:]
-        drawCards(nugget: &player, count: 1)  // or however many per turn
+        if !(player.hand.count >= 8) {
+            drawCards(nugget: &player, count: 1)  // or however many per turn
+        }
+        if !(enemy.hand.count >= 8) {
+            drawCards(nugget: &enemy, count: 1)
+        }
         phase = .cardAssignment(slotIndex: 0)
     }
     
