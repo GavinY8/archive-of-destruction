@@ -25,6 +25,7 @@ struct Nugget {
     var statuses: [Status]
     
     var isStaggered: Bool = false
+    var staggerJustApplied: Bool = false   // ← add this
 }
 
 struct Page {

@@ -130,13 +130,8 @@ struct FightScreen: View {
 
     func assignCard(_ card: Card, toSlot slot: Int) {
         assignedCards[slot] = card
-        
-        // Remove card from hand and deduct light
-        if let index = player.hand.firstIndex(where: { $0.id == card.id }) {
-            player.hand.remove(at: index)
-        }
-        player.light -= card.cost
-        
+        // don't touch hand or light here
+
         let nextSlot = slot + 1
         if nextSlot < totalSlots {
             phase = .cardAssignment(slotIndex: nextSlot)
@@ -146,30 +141,133 @@ struct FightScreen: View {
     }
 
     func startResolution() {
+        // 1. Pay costs and remove cards from player hand
+        for (_, card) in assignedCards {
+            if let index = player.hand.firstIndex(where: { $0.id == card.id }) {
+                player.hand.remove(at: index)
+            }
+            player.light -= card.cost
+        }
+
         phase = .resolving
         combatEvents = []
         currentEventIndex = 0
 
-        // Example: one clash using assignedCards[0]
-        if let pCard = assignedCards[0],
-           let eCard = chooseCard(unit: &enemy, strategy: "highest_cost") {
+        // 2. If enemy is staggered, they do nothing this turn
+        if enemy.isStaggered {
+            for (_, pCard) in assignedCards {
+                // Resolve player cards as unopposed attacks
+                unopposedAttack(attacker: &player, defender: &enemy, chosenCard: pCard)
+                // If you want: add roll/damage events inside unopposedAttack or around it
+            }
 
-            clash(player: &player,
-                  enemy: &enemy,
-                  playerCard: pCard,
-                  enemyCard: eCard,
-                  events: &combatEvents)
+            Task {
+                log.append("\(enemy.name) is staggered and cannot act.")
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                turnEnd(player: &player, enemy: &enemy)
+                phase = .turnEnd
+            }
+            return
         }
 
-        // Now replay events slowly into the UI
-        isReplayingEvents = true
+        // 3. Normal behavior when enemy NOT staggered...
+
+        // Track which speed slots the enemy actually used
+        var enemyPlayedSlots: Set<Int> = []
+
+        // Enemy picks cards for each of their speed slots
+        for slotIndex in 0..<enemy.page.speedDice.count {
+            print("Slot", slotIndex, "enemy isStaggered:", enemy.isStaggered)
+
+            guard let eCard = chooseCard(unit: &enemy, strategy: "highest_cost") else {
+                print("Enemy has no card for slot", slotIndex)
+                continue
+            }
+
+            enemyPlayedSlots.insert(slotIndex)
+
+            if let pCard = assignedCards[slotIndex] {
+                // Both sides have a card — clash
+                clash(
+                    player: &player,
+                    enemy: &enemy,
+                    playerCard: pCard,
+                    enemyCard: eCard,
+                    events: &combatEvents
+                )
+            } else {
+                // Enemy unopposed with this card
+                print("Enemy unopposed with \(eCard.name)")
+
+                var tempE = enemy
+                tempE.page.speedDice = [SpeedDice(min: 1, max: 1, assignedCard: eCard)]
+                StatusManager.triggerAttackStartStatuses(on: &tempE)
+                var processedCard = tempE.page.speedDice[0].assignedCard!
+
+                while !processedCard.dice.isEmpty && !player.isStaggered {
+                    let die = processedCard.dice.removeFirst()
+                    let eRoll = roll(min: die.minRoll, max: die.maxRoll)
+
+                    // Log the roll
+                    combatEvents.append(
+                        CombatEvent(
+                            type: .roll,
+                            actorName: enemy.name,
+                            cardName: eCard.name,
+                            dieIndex: 0,
+                            roll: eRoll,
+                            hpDamage: nil,
+                            staggerDamage: nil
+                        )
+                    )
+
+                    // Only attack if it's an attack die
+                    if die.type == .atk {
+                        let (hp, stg) = calculateDamage(
+                            baseRoll: eRoll,
+                            type: die.atkType,
+                            target: player
+                        )
+                        attack(
+                            attacker: &enemy,
+                            defender: &player,
+                            chosenDice: die,
+                            diceRoll: eRoll
+                        )
+
+                        combatEvents.append(
+                            CombatEvent(
+                                type: .damage,
+                                actorName: enemy.name,
+                                cardName: eCard.name,
+                                dieIndex: 0,
+                                roll: nil,
+                                hpDamage: hp,
+                                staggerDamage: stg
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        // 4. Any player slots the enemy never matched → unopposed player attacks
+        for (slotIndex, pCard) in assignedCards {
+            if !enemyPlayedSlots.contains(slotIndex) {
+                print("Player unopposed with \(pCard.name) at slot", slotIndex)
+                unopposedAttack(attacker: &player, defender: &enemy, chosenCard: pCard)
+                // Optional: if you want the same roll-by-roll events here,
+                // you can mirror the enemy unopposed logic but for the player.
+            }
+        }
+
+        // 5. Replay events one by one into the log
         Task {
             for i in 0..<combatEvents.count {
                 currentEventIndex = i
                 appendEventToLog(combatEvents[i])
-                try? await Task.sleep(nanoseconds: 600_000_000) // 0.6 sec per step
+                try? await Task.sleep(nanoseconds: 600_000_000)
             }
-
             isReplayingEvents = false
             turnEnd(player: &player, enemy: &enemy)
             phase = .turnEnd

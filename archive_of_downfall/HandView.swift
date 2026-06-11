@@ -43,7 +43,7 @@ struct HandView: View {
                     let mid = Double(total - 1) / 2.0
                     let offset = Double(index) - mid
                     let isSelected = selectedIndex == index
-                    let isAffordable = card.cost <= nugget.light
+                    let isAffordable = card.cost <= nugget.light && !nugget.isStaggered
 
                     CardView(card: card, isSelected: isSelected, isAffordable: isAffordable)
                         .rotationEffect(.degrees(offset * 6))

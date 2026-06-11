@@ -9,13 +9,12 @@ import Foundation
 func turnStart(player: inout Nugget, enemy: inout Nugget) {
     if !player.isStaggered {
         if (player.light < player.maxLight) {
-            player.light+=1
+            player.light += 1
         }
     }
-
     if !enemy.isStaggered {
         if (enemy.light < enemy.maxLight) {
-            enemy.light+=1
+            enemy.light += 1
         }
     }
 }
@@ -23,6 +22,25 @@ func turnStart(player: inout Nugget, enemy: inout Nugget) {
 func turnEnd(player: inout Nugget, enemy: inout Nugget) {
     StatusManager.triggerSceneEndStatuses(on: &player)
     StatusManager.triggerSceneEndStatuses(on: &enemy)
+    
+    handleStaggerEnd(of: &player)
+    handleStaggerEnd(of: &enemy)
+}
+
+private func handleStaggerEnd(of nugget: inout Nugget) {
+    // If they are staggered and this is their *second* turn end since breaking,
+    // recover them now.
+    if nugget.isStaggered {
+        if nugget.staggerJustApplied {
+            // They just got staggered this turn: keep them staggered,
+            // but clear the "just applied" marker so next turn they recover.
+            nugget.staggerJustApplied = false
+        } else if nugget.hp > 0 {
+            // They've already spent a full turn staggered → recover.
+            nugget.isStaggered = false
+            nugget.stagger = nugget.page.maxStagger
+        }
+    }
 }
 
 func tryClash(player: inout Nugget, target: inout Nugget, playerSpeed: Int, enemySpeed: Int,playerCard: Card, enemyCard: Card) {
@@ -186,24 +204,18 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
     
     
     //checks for remaining dice after the clash removes them
-    while (!tempPCard.dice.isEmpty) {
+    while !tempPCard.dice.isEmpty && !enemy.isStaggered {
         StatusManager.triggerBleedStatus(on: &player)
-        
         let tempPDice = tempPCard.dice.first!
-        
         let pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
-        
         attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
         tempPCard.dice.removeFirst()
     }
-    
-    while (!tempECard.dice.isEmpty) {
+
+    while !tempECard.dice.isEmpty && !player.isStaggered {
         StatusManager.triggerBleedStatus(on: &enemy)
-        
         let tempEDice = tempECard.dice.first!
-        
         let eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
-        
         attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
         tempECard.dice.removeFirst()
     }
@@ -306,8 +318,7 @@ func unopposedAttack(attacker: inout Nugget, defender: inout Nugget, chosenCard:
     }
 }
 
-
-private func calculateDamage(baseRoll: Int, type: AtkType?, target: Nugget) -> (healthDamage: Int, staggerDamage: Int) {
+func calculateDamage(baseRoll: Int, type: AtkType?, target: Nugget) -> (healthDamage: Int, staggerDamage: Int) {
     guard let type = type else { return (baseRoll, baseRoll) }
     
     // 1. Fetch status stacks
@@ -346,6 +357,11 @@ private func calculateDamage(baseRoll: Int, type: AtkType?, target: Nugget) -> (
 }
 
 func chooseCard(unit: inout Nugget, strategy: String = "highest_cost") -> Card? {
+    
+    if unit.isStaggered {
+        return nil
+    }
+    
     // 1. Filter hand for cards the unit can actually afford with their current light
     let affordableCards = unit.hand.filter { $0.cost <= unit.light }
     
@@ -406,9 +422,10 @@ func rollAllSpeedDice(for nugget: Nugget) -> [Int] {
 }
 
 private func staggerCheck(target: inout Nugget) {
-    if (target.stagger <= 0) {
+    if target.stagger <= 0 && !target.isStaggered {
         target.isStaggered = true
         target.stagger = 0
+        target.staggerJustApplied = true    // mark that this is the *first* time
     }
 }
 
