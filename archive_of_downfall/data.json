@@ -4,7 +4,7 @@
         {"name": "???", "text": "Wake up, Executioner. We have visitors."},
         {"name": "You", "text": "(Ugh… My head… I still haven't recovered fully from the last mission)."},
         {"name": "You", "text": "Hello, Senior Archivist Miller. What flavor of visitors do we have on our hands?"},
-        {"name": "Sr. Archivist Miller", "text": "As you know, there are only 2 types of people who seek out the Archive. People whose world has not yet been archived, desperate for knowledge of when their world will, and people whose world has already met its end. This one is the latter."},
+        {"name": "Sr. Archivist Miller", "text": "As you know, there are only two types of people who seek out the Archive. People whose world has not yet been archived, desperate for knowledge of when their world will, and people whose world has already met its end. This one is the latter."},
         {"name": "You", "text": "I'm guessing they're the violent type?"},
         {"name": "Sr. Archivist Miller", "text": "Precisely."},
         {"name": "You", "text": "Well, Senior Archivist, I'm gonna need your assistance with this one. My motor skills and mind are in shambles after that last mission."},
@@ -14,7 +14,7 @@
     "game_tutorial": [
         {"name": "Sr. Archivist Miller", "text": "Attention. It seems we are facing off against a Gooney."},
         {"name": "You", "text": "Gooney? Man, they really need to come up with better names."},
-        {"name": "Sr. Archivist Miller", "text": "You can see your available cards at the bottom. Most cards cost energy. It's the number in the yellow circle. Your energy is located above your head. You gain 1 energy every turn."},
+        {"name": "Sr. Archivist Miller", "text": "You can see your available cards at the bottom. Most cards cost energy. It's the number in the yellow circle. Your energy is located above your head. You gain one energy every turn."},
         {"name": "You", "text": "Yeah, yeah, I know."},
         {"name": "Sr. Archivist Miller", "text": "Why did you ask me to help then?"},
         {"name": "You", "text": "Memory doesn't come easily with concussions, y'know."},
