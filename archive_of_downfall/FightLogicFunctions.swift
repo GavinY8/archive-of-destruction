@@ -79,18 +79,19 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         print(pRoll)
         print(eRoll)
         
-        //check dice type here haha funny 300000000 line code
         events.append(
             CombatEvent(
                 type: .roll,
                 actorName: player.name,
                 cardName: playerCard.name,
-                dieIndex: 0,    // or track which die this is
+                dieIndex: 0,
                 roll: pRoll,
                 hpDamage: nil,
                 staggerDamage: nil
             )
         )
+
+        // 2) enemy roll
         events.append(
             CombatEvent(
                 type: .roll,
@@ -445,7 +446,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
     
     
     //checks for remaining dice after the clash removes them
-    while !tempPCard.dice.isEmpty && !enemy.isStaggered {
+    while !tempPCard.dice.isEmpty && !player.isStaggered {
         StatusManager.triggerBleedStatus(on: &player)
         let tempPDice = tempPCard.dice.first!
         let pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
@@ -465,7 +466,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         tempPCard.dice.removeFirst()
     }
 
-    while !tempECard.dice.isEmpty && !player.isStaggered {
+    while !tempECard.dice.isEmpty && !enemy.isStaggered {
         StatusManager.triggerBleedStatus(on: &enemy)
         let tempEDice = tempECard.dice.first!
         let eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)

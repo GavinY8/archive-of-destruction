@@ -117,6 +117,7 @@ enum CombatEventType {
 }
 
 struct CombatEvent {
+    let id = UUID()
     let type: CombatEventType
     let actorName: String
     let cardName: String
