@@ -306,6 +306,8 @@ struct FightScreen: View {
             drawCards(nugget: &enemy, count: 1)
         }
         phase = .cardAssignment(slotIndex: 0)
+        log.append("________________________________")
+        log.append("")
     }
     
     func endTurnWithoutMoreCards() {
@@ -655,7 +657,7 @@ struct CombatLogPanel: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
-                    ForEach(entries.suffix(6).reversed(), id: \.self) { entry in
+                    ForEach(entries.reversed(), id: \.self) { entry in
                         Text(entry)
                             .font(.system(size: 9, design: .monospaced))
                             .foregroundColor(Color(red: 0.65, green: 0.6, blue: 0.55))

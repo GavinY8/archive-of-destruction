@@ -450,6 +450,21 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         StatusManager.triggerBleedStatus(on: &player)
         let tempPDice = tempPCard.dice.first!
         let pRoll = roll(min: tempPDice.minRoll, max: tempPDice.maxRoll)
+
+        // Log this die's roll
+        events.append(
+            CombatEvent(
+                type: .roll,
+                actorName: player.name,
+                cardName: playerCard.name,
+                dieIndex: 0,
+                roll: pRoll,
+                hpDamage: nil,
+                staggerDamage: nil
+            )
+        )
+
+        // Apply this die's damage only
         let (hp, stg) = calculateDamage(baseRoll: pRoll, type: tempPDice.atkType, target: enemy)
         attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
         events.append(
@@ -463,6 +478,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 staggerDamage: stg
             )
         )
+
         tempPCard.dice.removeFirst()
     }
 
@@ -470,19 +486,34 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
         StatusManager.triggerBleedStatus(on: &enemy)
         let tempEDice = tempECard.dice.first!
         let eRoll = roll(min: tempEDice.minRoll, max: tempEDice.maxRoll)
+        
+        events.append(
+            CombatEvent(
+                type: .roll,
+                actorName: enemy.name,
+                cardName: enemyCard.name,
+                dieIndex: 0,
+                roll: eRoll,
+                hpDamage: nil,
+                staggerDamage: nil
+            )
+        )
+
+        // Apply this die's damage only
         let (hp, stg) = calculateDamage(baseRoll: eRoll, type: tempEDice.atkType, target: player)
         attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
         events.append(
             CombatEvent(
                 type: .damage,
-                actorName: player.name,
-                cardName: playerCard.name,
+                actorName: enemy.name,
+                cardName: enemyCard.name,
                 dieIndex: 0,
                 roll: nil,
                 hpDamage: hp,
                 staggerDamage: stg
             )
         )
+
         tempECard.dice.removeFirst()
     }
 
@@ -518,13 +549,30 @@ func roll(min: Int, max: Int) -> Int {
     return Int.random(in: min...max)
 }
 
+func apply(effect: DiceEffect, attacker: inout Nugget, defender: inout Nugget) {
+    switch effect {
+    case .inflict(let status, let stacks):
+        // assuming you have something like:
+        // StatusManager.apply(status: StatusType, stacks: Int, to: inout Nugget)
+        StatusManager.addStatus(type: status, amount: stacks, to: &defender)        
+    case .heal(let stacks):
+        attacker.hp = max(attacker.page.maxhp, attacker.hp+stacks)
+    case .draw(let stacks):
+        drawCards(nugget: &attacker, count: stacks)
+    case .gainLight(let stacks):
+        attacker.light = max(attacker.maxLight, attacker.light+stacks)
+    }
+}
 
 func attack(attacker: inout Nugget, defender: inout Nugget, chosenDice: Dice, diceRoll: Int) {
     let (hpDmg, staggerDmg) = calculateDamage(baseRoll: diceRoll, type: chosenDice.atkType, target: defender)
     
     defender.hp = max(0, defender.hp - hpDmg)
     defender.stagger = max(0, defender.stagger - staggerDmg)
-    
+    for effect in chosenDice.onHit {
+        apply(effect: effect, attacker: &attacker, defender: &defender)
+    }
+        
     staggerCheck(target: &defender)
 }
 
