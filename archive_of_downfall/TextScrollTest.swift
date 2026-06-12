@@ -49,37 +49,19 @@ struct VisualNovelTextBoxView: View {
     
     var body: some View {
         ZStack {
-            Image("StartScreen Background")
-                .resizable()
-                .ignoresSafeArea()
-            
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture { handleScreenTap() }
+            if currentScene == "story1" {
+                Image("StartScreen Background")
+                    .resizable()
+                    .ignoresSafeArea()
+            }
             
             VStack {
-                HStack {
-                    Spacer()
-                    
-                    Button(action: { showHistoryLog = true }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "clock.arrow.circlepath")
-                            Text("Log")
-                        }
-                        .font(.system(size: 12))
-                        .fontWeight(.bold)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 14)
-                        .foregroundColor(.white)
-                        .background(Capsule().fill(Color.black.opacity(0.6)))
-                    }
-                    .padding(.trailing, 16)
-                    .padding(.top, 10)
-                }
-                
                 Spacer()
+                
                 Image("Miller Disappointed")
                     .resizable()
+                    .scaledToFill()
+                    .frame(width: 200, height: 200)
                     .ignoresSafeArea()
                 
                 VStack(alignment: .leading, spacing: 10) {
@@ -120,23 +102,48 @@ struct VisualNovelTextBoxView: View {
             }
         }
         .task {
-            loadStoryData(for: currentScene)
+            await loadStoryData(for: currentScene)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { handleScreenTap() }
+        .overlay(alignment: .topTrailing) {
+            Button {
+                showHistoryLog = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "clock.arrow.circlepath")
+                    Text("Log")
+                }
+                .font(.system(size: 12))
+                .fontWeight(.bold)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 14)
+                .foregroundColor(.white)
+                .background(Capsule().fill(Color.black.opacity(0.6)))
+            }
+            .padding(.trailing, 16)
+            .padding(.top, 10)
         }
         .sheet(isPresented: $showHistoryLog) {
-            DialogueHistoryView(historyLines: dialogueHistory, currentLineIndex: currentLineIndex)
+            DialogueHistoryView(
+                historyLines: dialogueHistory,
+                currentLineIndex: currentLineIndex
+            )
         }
     }
     
-    func loadStoryData(for sceneName: String) {
+
+@MainActor
+    func loadStoryData(for sceneName: String) async {
         guard let fileURL = Bundle.main.url(forResource: "data", withExtension: "json") else {
             print("Error: data.json file not found in bundle.")
             return
         }
-        
+
         do {
             let jsonData = try Data(contentsOf: fileURL)
             let decodedData = try JSONDecoder().decode(StoryData.self, from: jsonData)
-            
+
             let chosenDialogue: [Dialogue]
             switch sceneName {
             case "story1":
@@ -146,15 +153,14 @@ struct VisualNovelTextBoxView: View {
             default:
                 return
             }
-            
-            let loadedLines = chosenDialogue.map { item in
-                DialogueLine(speaker: item.name, text: item.text)
+
+            let loadedLines = chosenDialogue.map { DialogueLine(speaker: $0.name, text: $0.text) }
+
+            await MainActor.run {
+                currentLineIndex = 0
+                script = loadedLines
+                startTyping()
             }
-            
-            self.currentLineIndex = 0
-            self.script = loadedLines
-            startTyping()
-            
         } catch {
             print("Error parsing JSON data: \(error)")
         }
@@ -162,40 +168,54 @@ struct VisualNovelTextBoxView: View {
     
     func startTyping() {
         guard currentLineIndex < script.count else { return }
+        typingTask?.cancel()
         displayedText = ""
         isTypingComplete = false
+
         let fullText = script[currentLineIndex].text
-        
         typingTask = Task {
             for character in fullText {
-                if Task.isCancelled { break }
-                displayedText.append(character)
+                if Task.isCancelled { return }
+                await MainActor.run {
+                    displayedText.append(character)
+                }
                 try? await Task.sleep(nanoseconds: 30_000_000)
             }
-            isTypingComplete = true
+            await MainActor.run {
+                isTypingComplete = true
+            }
         }
     }
     
     func handleScreenTap() {
-        guard currentLineIndex < script.count else { return }
+        guard !script.isEmpty else { return }
+
         if !isTypingComplete {
             typingTask?.cancel()
             displayedText = script[currentLineIndex].text
             isTypingComplete = true
-        } else {
-            currentLineIndex += 1
-            
-            if currentLineIndex >= script.count && currentScene == "story1" {
-                currentScene = "game_tutorial"
-                loadStoryData(for: "game_tutorial")
-            } else if currentLineIndex >= script.count && currentScene == "game_tutorial" {
-                onFinished?()
-            } else {
-                startTyping()
+            return
+        }
+
+        currentLineIndex += 1
+
+        if currentLineIndex < script.count {
+            startTyping()
+            return
+        }
+
+        if currentScene == "story1" {
+            currentScene = "game_tutorial"
+            Task {
+                await loadStoryData(for: "game_tutorial")
             }
+        } else {
+            onFinished?()
         }
     }
+    
 }
+
 
 struct DialogueHistoryView: View {
     let historyLines: [DialogueLine]
@@ -276,6 +296,6 @@ struct DialogueLogRow: View {
     }
 }
 
-#Preview() {
+#Preview(traits: .landscapeLeft) {
     VisualNovelTextBoxView()
 }
