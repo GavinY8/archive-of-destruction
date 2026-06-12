@@ -148,25 +148,39 @@ struct DicePip: View {
 
     var color: Color {
         switch die.type {
+        case .atk: return Color.red
+        case .block: return Color.blue
+        case .evade: return Color.blue
+        }
+    }
+    
+    var symbol: String {
+        switch die.type {
         case .atk:
             switch die.atkType {
-            case .slash:  return Color(red: 0.85, green: 0.3, blue: 0.3)
-            case .pierce: return Color(red: 0.35, green: 0.65, blue: 0.9)
-            case .blunt:  return Color(red: 0.75, green: 0.5, blue: 0.2)
-            case .none:   return .red
+            case .slash:  return "🗡"   // or "Sl", or "🗡"
+            case .pierce: return "𓐬"   // or "Pi"
+            case .blunt:  return "💥"   // or "Bl"
+            case .none:   return "?"
             }
-        case .block: return Color(red: 0.4, green: 0.7, blue: 0.45)
-        case .evade: return Color(red: 0.7, green: 0.55, blue: 0.85)
+        case .block:
+            return "🛡️"                 // or "B"
+        case .evade:
+            return "🔄"                 // or "E"
         }
     }
 
     var body: some View {
         VStack(spacing: 1) {
-            Text("\(die.maxRoll)")
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
+            Text(symbol)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
                 .foregroundColor(.white)
+
+            Text("\(die.minRoll) – \(die.maxRoll)")
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(.white.opacity(0.9))
         }
-        .frame(width: 18, height: 18)
+        .frame(width: 25, height: 25)
         .background(color.opacity(0.85))
         .clipShape(RoundedRectangle(cornerRadius: 3))
     }

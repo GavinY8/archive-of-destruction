@@ -228,6 +228,7 @@ struct FightScreen: View {
                             type: die.atkType,
                             target: player
                         )
+                        print("enemy do da attack unopposed here")
                         attack(
                             attacker: &enemy,
                             defender: &player,
@@ -340,9 +341,17 @@ struct NuggetInfoPanel: View {
 
     var body: some View {
         VStack(alignment: flipped ? .leading : .trailing, spacing: 6) {
-            Text(nugget.name)
-                .font(.system(size: 15, weight: .bold, design: .serif))
-                .foregroundColor(Color(red: 0.92, green: 0.88, blue: 0.78))
+            HStack {
+                Text(nugget.name)
+                    .font(.system(size: 15, weight: .bold, design: .serif))
+                    .foregroundColor(Color(red: 0.92, green: 0.88, blue: 0.78))
+                HStack {
+                    LightMeter(current: nugget.light, max: nugget.maxLight)
+                        .padding(.trailing, 24)
+                        .padding(.top, 16)
+                }
+                .offset(x: 20, y: -7)
+            }
 
             // HP bar
             StatBar(
@@ -361,6 +370,47 @@ struct NuggetInfoPanel: View {
                 color: Color(red: 0.8, green: 0.65, blue: 0.2),
                 flipped: flipped
             )
+            
+            HStack {
+                VStack {
+                    HStack {
+                        Text("🗡 \(String(format: "%.1f", nugget.page.slash))")
+                            .foregroundStyle(.red)
+                            .font(.system(size: 10))
+                    }
+                    HStack {
+                        Text("𓐬 \(String(format: "%.1f", nugget.page.pierce))")
+                            .foregroundStyle(.red)
+                            .font(.system(size: 10))
+                    }
+                    HStack {
+                        Text("💥 \(String(format: "%.1f", nugget.page.blunt))")
+                            .foregroundStyle(.red)
+                            .font(.system(size: 10))
+                    }
+                }
+                ///stagger ones
+                VStack {
+                    HStack {
+                        Text("🗡 \(String(format: "%.1f", nugget.page.staggerSlash))")
+                            .foregroundStyle(.yellow)
+                            .font(.system(size: 10))
+                    }
+                    HStack {
+                        Text("𓐬 \(String(format: "%.1f", nugget.page.staggerPierce))")
+                            .foregroundStyle(.yellow)
+                            .font(.system(size: 10))
+                    }
+                    HStack {
+                        Text("💥 \(String(format: "%.1f", nugget.page.staggerBlunt))")
+                            .foregroundStyle(.yellow)
+                            .font(.system(size: 10))
+                    }
+                }
+                
+            
+                
+            }
 
             // Statuses
             if !nugget.statuses.isEmpty {

@@ -40,8 +40,8 @@ struct CardDatabase {
     
     //Starter Deck
     static let starterDeck: [Card] = [
-        block, block, block,
-        lightAttack, lightAttack, block,
-        block, block, block
+        lightAttack, lightAttack, lightAttack,
+        lightAttack, lightAttack, lightAttack,
+        lightAttack, lightAttack, lightAttack
     ]
 }
