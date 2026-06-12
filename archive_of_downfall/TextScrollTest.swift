@@ -11,7 +11,6 @@ struct Dialogue: Decodable {
 }
 
 struct StoryData: Decodable {
-    let tutorial: [Dialogue]
     let story1: [Dialogue]
     let game_tutorial: [Dialogue]
 }
