@@ -26,3 +26,6 @@ struct GameCoordinator: View {
         .animation(.easeInOut(duration: 0.6), value: scene)
     }
 }
+//so im thinking right
+//we have the toturial with the battle background
+//then we have the game
