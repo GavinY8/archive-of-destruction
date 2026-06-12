@@ -10,7 +10,6 @@
         {"name": "You", "text": "Well, Senior Archivist, I'm gonna need your assistance with this one. My motor skills and mind are in shambles after that last mission."},
         {"name": "Sr. Archivist Miller", "text": "Fine, but follow exactly what I say."},
         {"name": "You", "text": "Alright! Let's do this." },
-
     ],
     "game_tutorial": [
         {"name": "Sr. Archivist Miller", "text": "Attention. It seems we are facing off against a Gooney."},
@@ -24,7 +23,6 @@
         {"name": "Sr. Archivist Miller", "text": "Right, I almost forgot."},
         {"name": "Sr. Archivist Miller", "text": "Your cards have different damage types. Some enemies have weaknesses to certain damage types, choose wisely when fighting."},
         {"name": "You", "text": "So I just gotta hit them hard, right?"},
-        //"Sr. Archivist Miller" becomes disappointed
         {"name": "Sr. Archivist Miller", "text": "You executioners and your lower level of thinking…"},
         {"name": "Sr. Archivist Miller", "text": "Make sure to keep an eye out on the yellow bar under your HP. That's your stagger bar. If it drops to zero, you'll get 'staggered' for the rest of this turn, the next, and take extra damage."},
         {"name": "Sr. Archivist Miller", "text": "Of course, this applies to your foes too, so plan your actions accordingly… (Though that might be too tall of a task for you)."},

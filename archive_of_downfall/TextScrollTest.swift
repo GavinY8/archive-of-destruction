@@ -11,7 +11,6 @@ struct Dialogue: Decodable {
 }
 
 struct StoryData: Decodable {
-    let tutorial: [Dialogue]
     let story1: [Dialogue]
     let game_tutorial: [Dialogue]
 }
@@ -23,7 +22,7 @@ struct VisualNovelTextBoxView: View {
     @State private var isTypingComplete = false
     @State private var typingTask: Task<Void, Never>? = nil
     
-    @State private var currentScene = "tutorial"
+    @State private var currentScene = "story1"
     @State private var showHistoryLog = false
     
     // FIX: Changed prefix calculation to include the current active line position
@@ -135,8 +134,6 @@ struct VisualNovelTextBoxView: View {
             
             let chosenDialogue: [Dialogue]
             switch sceneName {
-            case "tutorial":
-                chosenDialogue = decodedData.tutorial
             case "story1":
                 chosenDialogue = decodedData.story1
             case "game_tutorial":
@@ -183,9 +180,9 @@ struct VisualNovelTextBoxView: View {
         } else {
             currentLineIndex += 1
             
-            if currentLineIndex >= script.count && currentScene == "tutorial" {
-                currentScene = "story1"
-                loadStoryData(for: "story1")
+            if currentLineIndex >= script.count && currentScene == "story1" {
+                currentScene = "game_tutorial"
+                loadStoryData(for: "game_tutorial")
             } else {
                 startTyping()
             }
