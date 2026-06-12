@@ -16,6 +16,7 @@ struct StoryData: Decodable {
 }
 
 struct VisualNovelTextBoxView: View {
+    var onFinished: (() -> Void)? = nil
     @State private var script: [DialogueLine] = []
     @State private var currentLineIndex = 0
     @State private var displayedText = ""
@@ -48,7 +49,8 @@ struct VisualNovelTextBoxView: View {
     
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Image("StartScreen Background")
+                .resizable()
                 .ignoresSafeArea()
             
             Color.clear
@@ -76,6 +78,9 @@ struct VisualNovelTextBoxView: View {
                 }
                 
                 Spacer()
+                Image("Miller Disappointed")
+                    .resizable()
+                    .ignoresSafeArea()
                 
                 VStack(alignment: .leading, spacing: 10) {
                     if !script.isEmpty && currentLineIndex < script.count {
@@ -108,7 +113,7 @@ struct VisualNovelTextBoxView: View {
                 .frame(maxWidth: .infinity)
                 .background(
                     Rectangle()
-                        .fill(Color.black.opacity(0.85))
+                        .fill(Color.black.opacity(0.3))
                         .overlay(VStack { Color.white.frame(height: 2); Spacer() })
                         .ignoresSafeArea(edges: [.horizontal, .bottom])
                 )
@@ -183,6 +188,8 @@ struct VisualNovelTextBoxView: View {
             if currentLineIndex >= script.count && currentScene == "story1" {
                 currentScene = "game_tutorial"
                 loadStoryData(for: "game_tutorial")
+            } else if currentLineIndex >= script.count && currentScene == "game_tutorial" {
+                onFinished?()
             } else {
                 startTyping()
             }
@@ -269,6 +276,6 @@ struct DialogueLogRow: View {
     }
 }
 
-#Preview {
+#Preview() {
     VisualNovelTextBoxView()
 }
