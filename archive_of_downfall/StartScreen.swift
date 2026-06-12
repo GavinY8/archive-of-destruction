@@ -12,12 +12,11 @@ struct StartScreen: View {
         ZStack {
             Image("StartScreen Background")
                 .resizable()
-                .scaledToFill()
                 .ignoresSafeArea()
         }
     }
 }
 
-#Preview {
+#Preview(traits: .landscapeLeft) {
     StartScreen()
 }
