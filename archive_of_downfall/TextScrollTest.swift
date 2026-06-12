@@ -16,6 +16,7 @@ struct StoryData: Decodable {
 }
 
 struct VisualNovelTextBoxView: View {
+    var onFinished: (() -> Void)? = nil
     @State private var script: [DialogueLine] = []
     @State private var currentLineIndex = 0
     @State private var displayedText = ""
@@ -183,6 +184,8 @@ struct VisualNovelTextBoxView: View {
             if currentLineIndex >= script.count && currentScene == "story1" {
                 currentScene = "game_tutorial"
                 loadStoryData(for: "game_tutorial")
+            } else if currentLineIndex >= script.count && currentScene == "game_tutorial" {
+                onFinished?()
             } else {
                 startTyping()
             }
