@@ -56,12 +56,10 @@ struct VisualNovelTextBoxView: View {
             }
             
             VStack {
-                Spacer()
-                
-                Image("Miller Disappointed")
+                Image("Miller Clipboard")
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 200, height: 200)
+                    .frame(width: 225, height: 225)
                     .ignoresSafeArea()
                 
                 VStack(alignment: .leading, spacing: 10) {

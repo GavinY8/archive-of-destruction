@@ -2,8 +2,8 @@
     "story1": [
         {"name": "", "text": "\"At the end of every civilization, the Archive arrives.\""},
         {"name": "???", "text": "Wake up, Executioner. We have visitors."},
-        {"name": "You", "text": "(Ugh… My head… I still haven't recovered fully from the last mission)."},
-        {"name": "You", "text": "Hello, Senior Archivist Miller. What flavor of visitors do we have on our hands?"},
+        {"name": "You", "text": "(Ugh… My head… I'm still feeling the after effects from the latest mission.)"},
+        {"name": "You", "text": "Ah. Hello, Senior Archivist Miller. What flavor of visitors do we have on our hands?"},
         {"name": "Sr. Archivist Miller", "text": "As you know, there are only two types of people who seek out the Archive. Those seeking knowledge, and those seeking revenge."},
         {"name": "You", "text": "I'm guessing they're the latter?"},
         {"name": "Sr. Archivist Miller", "text": "Precisely."},
