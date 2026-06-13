@@ -14,7 +14,8 @@
     "game_tutorial": [
         {"name": "Sr. Archivist Miller", "text": "Attention. It seems we are facing off against a Gooney."},
         {"name": "You", "text": "Gooney? Man, they really need to come up with better names."},
-        {"name": "Sr. Archivist Miller", "text": "You can see your available cards at the bottom. Most cards cost energy. It's the number in the yellow circle. Your energy is located above your head. You gain one energy every turn."},
+        {"name": "Sr. Archivist Miller", "text": "You can see your available cards at the bottom. Most cards cost energy. It's the number in the yellow circle."},
+        {"name": "Sr. Archivist Miller", "text": "Your energy is located above your head. You gain one energy every turn."},
         {"name": "You", "text": "Yeah, yeah, I know."},
         {"name": "Sr. Archivist Miller", "text": "Why did you ask me to help then?"},
         {"name": "You", "text": "You try getting hit over the head five times then."},

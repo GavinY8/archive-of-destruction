@@ -25,6 +25,7 @@ struct VisualNovelTextBoxView: View {
     
     @State private var currentScene = "story1"
     @State private var showHistoryLog = false
+    @State private var changeMillerPic = false
     
     // FIX: Changed prefix calculation to include the current active line position
     var dialogueHistory: [DialogueLine] {
@@ -56,11 +57,19 @@ struct VisualNovelTextBoxView: View {
             }
             
             VStack {
-                Image("Miller Clipboard")
+                if(changeMillerPic){
+                Image("Miller Thinking")
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 225, height: 225)
+                    .frame(width: 150, height: 225)
                     .ignoresSafeArea()
+                } else {
+                    Image("Miller Clipboard")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 225, height: 225)
+                        .ignoresSafeArea()
+                }
                 
                 VStack(alignment: .leading, spacing: 10) {
                     if !script.isEmpty && currentLineIndex < script.count {
@@ -103,7 +112,10 @@ struct VisualNovelTextBoxView: View {
             await loadStoryData(for: currentScene)
         }
         .contentShape(Rectangle())
-        .onTapGesture { handleScreenTap() }
+        .onTapGesture {
+            handleScreenTap()
+            changeMillerPic.toggle()
+        }
         .overlay(alignment: .topTrailing) {
             Button {
                 showHistoryLog = true
