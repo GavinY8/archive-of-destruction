@@ -17,11 +17,13 @@ enum CombatPhase {
 // MARK: - Fight Screen
 
 struct FightScreen: View {
+    
     @State var player: Nugget
     @State var enemy: Nugget
     @State var phase: CombatPhase = .cardAssignment(slotIndex: 0)
     @State var assignedCards: [Int: Card] = [:]
     @State var log: [String] = []
+    
     @State private var combatEvents: [CombatEvent] = []
     @State private var currentEventIndex: Int = 0
     @State private var isReplayingEvents = false
@@ -29,7 +31,8 @@ struct FightScreen: View {
     @State private var showDeathScreen: Bool = false
     @State private var showPlayerDripping: Bool = false
     @State private var showEnemyDripping: Bool = false
-
+    
+    var onGameOver: (Bool) -> Void = { _ in }
     var totalSlots: Int { player.page.speedDice.count }
 
     var body: some View {
@@ -242,6 +245,15 @@ struct FightScreen: View {
             }
             isReplayingEvents = false
             turnEnd(player: &player, enemy: &enemy)
+
+            if enemy.hp <= 0 {
+                onGameOver(true)
+                return
+            } else if player.hp <= 0 {
+                onGameOver(false)
+                return
+            }
+
             phase = .turnEnd
         }
     }
@@ -274,7 +286,11 @@ struct FightScreen: View {
             }
 
             if player.hp <= 0 {
-                showDeathScreen = true
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    onGameOver(false)
+                }
+                return
             }
 
         case .staggerChange:

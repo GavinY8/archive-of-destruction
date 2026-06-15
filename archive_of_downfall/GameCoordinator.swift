@@ -5,9 +5,11 @@
 
 import SwiftUI
 
-enum GameScene {
+enum GameScene: Equatable{
     case dialogue
     case fight
+    case end
+    case end_fight(playerWon: Bool)
 }
 
 struct GameCoordinator: View {
@@ -20,12 +22,23 @@ struct GameCoordinator: View {
                 VisualNovelTextBoxView { scene = .fight }
                     .transition(.opacity)
             case .fight:
-                FightScreen(player: Nugget( name: "player", page: Page(30, 15, [SpeedDice(min: 1, max: 4)], 1.0, 1.5, 2.0, 1.0, 1.5, 2.0), hp: 30, stagger: 15, light: 3, maxLight: 3, deck: CardDatabase.starterDeck, hand: [], discard: [], statuses: []), enemy: Enemies.basic).transition(.opacity)
+                FightScreen( player: Nugget(name: "player",page: Page(30, 15, [SpeedDice(min: 1, max: 4)], 1.0, 1.5, 2.0, 1.0, 1.5, 2.0),hp: 30, stagger: 15, light: 3, maxLight: 3,deck: CardDatabase.starterDeck, hand: [], discard: [], statuses: []),enemy: Enemies.basic,onGameOver: { won in
+                                        scene = .end_fight(playerWon: won)
+                                    }
+                ).transition(.opacity)
+                
+            case .end_fight(let won):
+                VisualNovelTextBoxView(startScene: won ? "win" : "lose") {
+                    scene = .end
+                }
+                .transition(.opacity)
+
+            case .end:
+                VisualNovelTextBoxView(startScene: "end") {
+                }
+                .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.6), value: scene)
     }
 }
-//so im thinking right
-//we have the toturial with the battle background
-//then we have the game

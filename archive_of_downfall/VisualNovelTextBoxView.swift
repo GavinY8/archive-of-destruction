@@ -11,11 +11,16 @@ struct Dialogue: Decodable {
 }
 
 struct StoryData: Decodable {
+    let entry: [Dialogue]
     let story1: [Dialogue]
     let game_tutorial: [Dialogue]
+    let win: [Dialogue]
+    let lose: [Dialogue]
+    let end: [Dialogue]
 }
 
 struct VisualNovelTextBoxView: View {
+    var startScene: String = "entry"
     var onFinished: (() -> Void)? = nil
     @State private var script: [DialogueLine] = []
     @State private var currentLineIndex = 0
@@ -23,9 +28,12 @@ struct VisualNovelTextBoxView: View {
     @State private var isTypingComplete = false
     @State private var typingTask: Task<Void, Never>? = nil
     
-    @State private var currentScene = "story1"
+    @State private var currentScene = "entry"
     @State private var showHistoryLog = false
     @State private var changeMillerPic = false
+    
+    @State private var win = false
+    @State private var lose = false
     
     // FIX: Changed prefix calculation to include the current active line position
     var dialogueHistory: [DialogueLine] {
@@ -50,32 +58,34 @@ struct VisualNovelTextBoxView: View {
     
     var body: some View {
         ZStack {
-            if currentScene == "story1" {
+            if currentScene == "story1" || currentScene == "lose" || currentScene == "entry"{
                 Image("StartScreen Background")
                     .resizable()
                     .ignoresSafeArea()
-            } else if currentScene == "game_tutorial" {
+            } else if currentScene == "game_tutorial" || currentScene == "win" {
                 Image("BattleScreen Background")
                     .resizable()
                     .ignoresSafeArea()
             }
             
             VStack {
-                if(changeMillerPic){
-                    Image("Miller Thinking")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 150, height: 225)
-                        .ignoresSafeArea()
-                        .offset(y: 30)
-                } else {
-                    Image("Miller Clipboard")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 225, height: 225)
-                        .ignoresSafeArea()
-                        .offset(y: 30)
+                if currentScene == "story1" || currentScene == "game_tutorial" || currentScene == "win" || currentScene == "lose" {
+                    if(changeMillerPic){
+                        Image("Miller Thinking")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 150, height: 225)
+                            .ignoresSafeArea()
+                            .offset(y: 30)
+                    } else {
+                        Image("Miller Clipboard")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 225, height: 225)
+                            .ignoresSafeArea()
+                            .offset(y: 30)
 
+                    }
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     if !script.isEmpty && currentLineIndex < script.count {
@@ -116,6 +126,7 @@ struct VisualNovelTextBoxView: View {
             }
         }
         .task {
+            currentScene = startScene
             await loadStoryData(for: currentScene)
         }
         .contentShape(Rectangle())
@@ -152,6 +163,7 @@ struct VisualNovelTextBoxView: View {
 
 @MainActor
     func loadStoryData(for sceneName: String) async {
+        
         guard let fileURL = Bundle.main.url(forResource: "data", withExtension: "json") else {
             print("Error: data.json file not found in bundle.")
             return
@@ -163,10 +175,18 @@ struct VisualNovelTextBoxView: View {
 
             let chosenDialogue: [Dialogue]
             switch sceneName {
+            case "entry":
+                chosenDialogue = decodedData.entry
             case "story1":
                 chosenDialogue = decodedData.story1
             case "game_tutorial":
                 chosenDialogue = decodedData.game_tutorial
+            case "win":
+                chosenDialogue = decodedData.win
+            case "lose":
+                chosenDialogue = decodedData.lose
+            case "end":
+                chosenDialogue = decodedData.end
             default:
                 return
             }
@@ -221,7 +241,12 @@ struct VisualNovelTextBoxView: View {
             return
         }
 
-        if currentScene == "story1" {
+        if currentScene == "entry" {
+            currentScene = "story1"
+            Task {
+                await loadStoryData(for: "story1")
+            }
+        } else if currentScene == "story1" {
             currentScene = "game_tutorial"
             Task {
                 await loadStoryData(for: "game_tutorial")

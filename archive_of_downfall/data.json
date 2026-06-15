@@ -1,9 +1,11 @@
 {
-    "story1": [
+    "entry": [
         {"name": "", "text": "\"At the end of every civilization, the Archive arrives.\""},
+    ],
+    "story1": [
         {"name": "???", "text": "Wake up, Executioner. We have visitors."},
         {"name": "You", "text": "(Ugh… My head… I'm still feeling the after effects from the latest mission.)"},
-        {"name": "You", "text": "Ah. Hello, Senior Archivist Miller. What flavor of visitors do we have on our hands?"},
+        {"name": "You", "text": "Ah. Hello, Senior Archivist Miller. What flavor of visitors do we have on our hands today?"},
         {"name": "Sr. Archivist Miller", "text": "As you know, there are only two types of people who seek out the Archive. Those seeking knowledge, and those seeking revenge."},
         {"name": "You", "text": "I'm guessing they're the latter?"},
         {"name": "Sr. Archivist Miller", "text": "Precisely."},
@@ -30,6 +32,19 @@
         {"name": "Sr. Archivist Miller", "text": "Of course, this applies to your foes too, so plan your actions accordingly… (Though that might be too tall of a task for you)."},
         {"name": "You", "text": "Huh? What was that?"},
         {"name": "Sr. Archivist Miller", "text": "Nothing. Make sure to keep speed in mind, however you wouldn't be needing it in this fight."},
-
     ],
+    "win": [
+        {"name": "Sr. Archivist Miller", "text": "Good work out there."},
+        {"name": "Sr. Archivist Miller", "text": "...is what I would say if it wasn't some random mob."},
+        {"name": "You", "text": "C'mon, give me some more credit here. I won while practically disabled!"},
+        {"name": "Sr. Archivist Miller", "text": "We have a medical department for a reason."},
+        {"name": "Sr. Archivist Miller", "text": "..!"},
+        {"name": "Sr. Archivist Miller", "text": "Get ready. We have more visitors."},
+    ],
+    "lose": [
+        {"name": "Sr. Archivist Miller", "text": "All that handholding and he still died… Why am I even surprised?"},
+    ],
+    "end": [
+        {"name": "", "text": "END OF DEMO"},
+    ]
 }
