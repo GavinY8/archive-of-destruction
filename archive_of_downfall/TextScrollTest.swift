@@ -54,15 +54,19 @@ struct VisualNovelTextBoxView: View {
                 Image("StartScreen Background")
                     .resizable()
                     .ignoresSafeArea()
+            } else if currentScene == "game_tutorial" {
+                Image("BattleScreen Background")
+                    .resizable()
+                    .ignoresSafeArea()
             }
             
             VStack {
                 if(changeMillerPic){
-                Image("Miller Thinking")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 150, height: 225)
-                    .ignoresSafeArea()
+                    Image("Miller Thinking")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 150, height: 225)
+                        .ignoresSafeArea()
                 } else {
                     Image("Miller Clipboard")
                         .resizable()
@@ -70,7 +74,6 @@ struct VisualNovelTextBoxView: View {
                         .frame(width: 225, height: 225)
                         .ignoresSafeArea()
                 }
-                
                 VStack(alignment: .leading, spacing: 10) {
                     if !script.isEmpty && currentLineIndex < script.count {
                         Text(script[currentLineIndex].speaker)
