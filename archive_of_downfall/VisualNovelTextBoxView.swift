@@ -77,14 +77,20 @@ struct VisualNovelTextBoxView: View {
                             .frame(width: 150, height: 225)
                             .ignoresSafeArea()
                             .offset(y: 30)
-                    } else {
-                        Image("Miller Clipboard")
+                    } else if (currentScene == "lose") {
+                        Image("Miller Disappointed")
                             .resizable()
                             .scaledToFill()
                             .frame(width: 225, height: 225)
                             .ignoresSafeArea()
                             .offset(y: 30)
-
+                    } else {
+                        Image("Miller Clipboard")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 150, height: 225)
+                            .ignoresSafeArea()
+                            .offset(y: 30)
                     }
                 }
                 VStack(alignment: .leading, spacing: 10) {
