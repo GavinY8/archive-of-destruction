@@ -131,9 +131,10 @@ struct FightScreen: View {
                     if showEnemyDripping {
                         GifView(name: "Dripping")
                             .frame(width: 40, height: 50)
-                            .position(x: -50, y: -200)
+                            .position(x: 0, y: -200)
                             .transition(.opacity)
                             .animation(.easeInOut(duration: 0.3), value: showEnemyDripping)
+                            .zIndex(10)
                     }
 
                     // Death screen
@@ -293,7 +294,6 @@ struct FightScreen: View {
         }
         phase = .cardAssignment(slotIndex: 0)
         log.append("________________________________")
-        log.append("")
     }
     
     func endTurnWithoutMoreCards() {
