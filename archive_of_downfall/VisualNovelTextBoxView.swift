@@ -271,7 +271,7 @@ struct DialogueHistoryView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         if historyLines.isEmpty {
                             Text("No dialogue spoken yet.")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.white)
                                 .italic()
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .padding(.top, 40)
@@ -294,6 +294,7 @@ struct DialogueHistoryView: View {
                     }
                     .padding(.vertical)
                 }
+                .background(.black)
                 .navigationTitle("Dialogue Log")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -329,7 +330,7 @@ struct DialogueLogRow: View {
                 
                 Text(line.text)
                     .font(.body)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.white)
                     .opacity(index == currentLineIndex ? 1.0 : 0.75)
             }
             Spacer()

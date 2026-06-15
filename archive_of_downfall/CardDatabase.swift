@@ -13,7 +13,8 @@ struct CardDatabase {
         cost: 0,
         dice: [Dice(minRoll: 1, maxRoll: 4, type: .evade)]
     )
-    static let block = Card (name: "block", cost: 0, dice: [Dice(minRoll: 100, maxRoll: 101, type: .block)])
+    static let block = Card (name: "block", cost: 0, dice: [Dice(minRoll: 2, maxRoll: 6, type: .block)])
+    
     //1-Cost Cards
     static let lightAttack = Card(
         name: "Light Attack",
@@ -23,7 +24,11 @@ struct CardDatabase {
             Dice(minRoll: 1, maxRoll: 4, type: .atk, atkType: .blunt)
         ]
     )
+    
+    static let stab = Card (name: "stab", cost: 1, dice: [Dice(minRoll: 2, maxRoll: 7, type: .atk, atkType: .pierce, onHit: [DiceEffect.inflict(.bleed, stacks: 3)])]) //DO NOT USE BLEED YET
+    
     //2-Cost Cards
+    static let burningSlash = Card (name: "Burning Slash", cost: 2, dice: [Dice(minRoll: 3, maxRoll: 9, type: .atk, atkType: .slash, onHit: [DiceEffect.inflict(.burn, stacks: 6)])])
     
     //3-Cost Cards
     static let focusedStrikes = Card(
@@ -40,8 +45,8 @@ struct CardDatabase {
     
     //Starter Deck
     static let starterDeck: [Card] = [
-        lightAttack, lightAttack, lightAttack,
-        lightAttack, lightAttack, lightAttack,
-        lightAttack, lightAttack, lightAttack
+        block, lightAttack, burningSlash,
+        evade, block, evade,
+        focusedStrikes, focusedStrikes, lightAttack
     ]
 }
