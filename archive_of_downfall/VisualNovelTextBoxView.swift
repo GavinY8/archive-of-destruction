@@ -67,20 +67,23 @@ struct VisualNovelTextBoxView: View {
                         .scaledToFill()
                         .frame(width: 150, height: 225)
                         .ignoresSafeArea()
+                        .offset(y: 30)
                 } else {
                     Image("Miller Clipboard")
                         .resizable()
                         .scaledToFill()
                         .frame(width: 225, height: 225)
                         .ignoresSafeArea()
+                        .offset(y: 30)
+
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     if !script.isEmpty && currentLineIndex < script.count {
                         Text(script[currentLineIndex].speaker)
                             .font(.headline)
                             .foregroundColor(.white)
-                            .rotationEffect(.degrees(-15))
-                            .offset(x: -20, y: -20)
+                            .rotationEffect(.degrees(-10))
+                            .offset(x: -30, y: -10)
                             .padding(.top, 30)
                         
                         conditionalDialogue
@@ -90,7 +93,7 @@ struct VisualNovelTextBoxView: View {
                             .multilineTextAlignment(.leading)
                             .lineLimit(nil)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                            .offset(x: 30, y: -20)
+                            .offset(x: 30, y: -10)
                             .padding(.trailing)
                     } else {
                         Text(script.isEmpty ? "Loading Story..." : "Story Finished")
@@ -100,8 +103,8 @@ struct VisualNovelTextBoxView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
-                .padding(.bottom, 20)
-                .frame(height: 100)
+                .padding(.bottom, 30)
+                .frame(height: 120)
                 .frame(maxWidth: .infinity)
                 .background(
                     Rectangle()
@@ -109,6 +112,7 @@ struct VisualNovelTextBoxView: View {
                         .overlay(VStack { Color.white.frame(height: 2); Spacer() })
                         .ignoresSafeArea(edges: [.horizontal, .bottom])
                 )
+                .offset(y: 30)
             }
         }
         .task {

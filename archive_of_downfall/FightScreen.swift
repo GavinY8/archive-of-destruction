@@ -25,99 +25,139 @@ struct FightScreen: View {
     @State private var combatEvents: [CombatEvent] = []
     @State private var currentEventIndex: Int = 0
     @State private var isReplayingEvents = false
+    @State private var showDripping: Bool = false
+    @State private var showDeathScreen: Bool = false
+    @State private var showPlayerDripping: Bool = false
+    @State private var showEnemyDripping: Bool = false
 
     var totalSlots: Int { player.page.speedDice.count }
 
     var body: some View {
-        ZStack {
-            // Background
-            Color(red: 0.07, green: 0.06, blue: 0.05).ignoresSafeArea()
-            backgroundTexture
-
-            VStack(spacing: 0) {
-                // Top bar: enemy vs player info
-                HStack(alignment: .top, spacing: 0) {
-                    NuggetInfoPanel(nugget: enemy, flipped: true)
-                    Spacer()
-                    CombatLogPanel(entries: log)
-                    Spacer()
-                    NuggetInfoPanel(nugget: player, flipped: false)
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .frame(height: 160)
-
-                Divider()
-                    .background(Color(red: 0.35, green: 0.3, blue: 0.25))
+        GeometryReader { geo in
+            ZStack {
+                // Background
+                Color(red: 0.07, green: 0.06, blue: 0.05).ignoresSafeArea()
+                backgroundTexture
+                
+                VStack(spacing: 0) {
+                    // Top bar: enemy vs player info
+                    HStack(alignment: .top, spacing: 0) {
+                        NuggetInfoPanel(nugget: enemy, flipped: true)
+                        Spacer()
+                        CombatLogPanel(entries: log)
+                        Spacer()
+                        NuggetInfoPanel(nugget: player, flipped: false)
+                    }
                     .padding(.horizontal, 20)
-
-                // Speed die slots
-                SpeedSlotRow(
-                    speedDice: player.page.speedDice,
-                    assignedCards: assignedCards,
-                    activeSlot: activeSlot
-                )
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .frame(height: 72)
-
-                Divider()
-                    .background(Color(red: 0.35, green: 0.3, blue: 0.25))
+                    .padding(.top, 12)
+                    .frame(height: 160)
+                    
+                    Divider()
+                        .background(Color(red: 0.35, green: 0.3, blue: 0.25))
+                        .padding(.horizontal, 20)
+                    
+                    // Speed die slots
+                    SpeedSlotRow(
+                        speedDice: player.page.speedDice,
+                        assignedCards: assignedCards,
+                        activeSlot: activeSlot
+                    )
                     .padding(.horizontal, 20)
-
-                // Bottom: hand or confirmation
-                Group {
-                    switch phase {
-                    case .cardAssignment(let slotIndex):
-                        ZStack(alignment: .bottomTrailing) {
-                            HandView(
-                                nugget: player,
-                                assignedCardNames: Set(assignedCards.values.map(\.name)),
-                                onCardSelected: { card in
-                                    assignCard(card, toSlot: slotIndex)
+                    .padding(.vertical, 8)
+                    .frame(height: 72)
+                    
+                    Divider()
+                        .background(Color(red: 0.35, green: 0.3, blue: 0.25))
+                        .padding(.horizontal, 20)
+                    
+                    // Bottom: hand or confirmation
+                    Group {
+                        switch phase {
+                        case .cardAssignment(let slotIndex):
+                            ZStack(alignment: .bottomTrailing) {
+                                HandView(
+                                    nugget: player,
+                                    assignedCardNames: Set(assignedCards.values.map(\.name)),
+                                    onCardSelected: { card in
+                                        assignCard(card, toSlot: slotIndex)
+                                    }
+                                )
+                                
+                                Button {
+                                    endTurnWithoutMoreCards()
+                                } label: {
+                                    Text("END TURN")
+                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                        .foregroundColor(Color(red: 0.08, green: 0.07, blue: 0.06))
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 8)
+                                        .background(Color(red: 0.7, green: 0.65, blue: 0.5))
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
                                 }
-                            )
-
-                            Button {
-                                endTurnWithoutMoreCards()
-                            } label: {
-                                Text("END TURN")
-                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                    .foregroundColor(Color(red: 0.08, green: 0.07, blue: 0.06))
-                                    .padding(.horizontal, 20)
-                                    .padding(.vertical, 8)
-                                    .background(Color(red: 0.7, green: 0.65, blue: 0.5))
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .padding(.trailing, 24)
+                                .padding(.bottom, 24)
                             }
-                            .padding(.trailing, 24)
-                            .padding(.bottom, 24)
-                        }
-                    case .confirmation:
-                        ConfirmationPanel(
-                            assignedCards: assignedCards,
-                            speedDice: player.page.speedDice
-                        ) {
-                            startResolution()
-                        } onBack: {
-                            // Go back to last unfilled slot
-                            let lastSlot = totalSlots - 1
-                            assignedCards.removeValue(forKey: lastSlot)
-                            phase = .cardAssignment(slotIndex: lastSlot)
-                        }
-                    case .resolving:
-                        ResolvingView()
-                    case .turnEnd:
-                        TurnEndView {
-                            advanceTurn()
+                        case .confirmation:
+                            ConfirmationPanel(
+                                assignedCards: assignedCards,
+                                speedDice: player.page.speedDice
+                            ) {
+                                startResolution()
+                            } onBack: {
+                                // Go back to last unfilled slot
+                                let lastSlot = totalSlots - 1
+                                assignedCards.removeValue(forKey: lastSlot)
+                                phase = .cardAssignment(slotIndex: lastSlot)
+                            }
+                        case .resolving:
+                            ResolvingView()
+                        case .turnEnd:
+                            TurnEndView {
+                                advanceTurn()
+                            }
                         }
                     }
+                    .frame(maxHeight: .infinity)
+                    
+                    if showPlayerDripping {
+                        GifView(name: "Dripping")
+                            .frame(width: 40, height: 50)
+                            .position(x: geo.size.width + 15, y: -200)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.3), value: showPlayerDripping)
+                    }
+
+                    // Enemy takes damage — left side
+                    if showEnemyDripping {
+                        GifView(name: "Dripping")
+                            .frame(width: 40, height: 50)
+                            .position(x: -50, y: -200)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.3), value: showEnemyDripping)
+                    }
+
+                    // Death screen
+                    if showDeathScreen {
+                        ZStack {
+                            Color.black.opacity(0.85).ignoresSafeArea()
+                            VStack(spacing: 20) {
+                                GifView(name: "Die")
+                                    .frame(width: 200, height: 200)
+                                Text("YOU DIED")
+                                    .font(.system(size: 32, weight: .bold, design: .serif))
+                                    .foregroundColor(Color(red: 0.75, green: 0.15, blue: 0.15))
+                            }
+                        }
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                        .animation(.easeIn(duration: 0.5), value: showDeathScreen)
+                    }
                 }
-                .frame(maxHeight: .infinity)
-            }
-            .onAppear {
+                .onAppear {
                     drawCards(nugget: &player, count: 5)
                     drawCards(nugget: &enemy, count: 5)
                 }
+            }
         }
     }
 
@@ -141,7 +181,6 @@ struct FightScreen: View {
     }
 
     func startResolution() {
-        // 1. Pay costs and remove cards from player hand
         for (_, card) in assignedCards {
             if let index = player.hand.firstIndex(where: { $0.id == card.id }) {
                 player.hand.remove(at: index)
@@ -153,64 +192,26 @@ struct FightScreen: View {
         combatEvents = []
         currentEventIndex = 0
 
-        // 2. If enemy is staggered, they do nothing this turn
-        if enemy.isStaggered {
-            for (_, pCard) in assignedCards {
-                // Resolve player cards as unopposed attacks
-                unopposedAttack(attacker: &player, defender: &enemy, chosenCard: pCard)
-                // If you want: add roll/damage events inside unopposedAttack or around it
-            }
-
-            Task {
-                log.append("\(enemy.name) is staggered and cannot act.")
-                try? await Task.sleep(nanoseconds: 400_000_000)
-                turnEnd(player: &player, enemy: &enemy)
-                phase = .turnEnd
-            }
-            return
-        }
-
-        // 3. Normal behavior when enemy NOT staggered...
-
-        // Track which speed slots the enemy actually used
-        var enemyPlayedSlots: Set<Int> = []
-
-        // Enemy picks cards for each of their speed slots
         for slotIndex in 0..<enemy.page.speedDice.count {
-            print("Slot", slotIndex, "enemy isStaggered:", enemy.isStaggered)
-
-            guard let eCard = chooseCard(unit: &enemy, strategy: "highest_cost") else {
-                print("Enemy has no card for slot", slotIndex)
-                continue
-            }
-
-            enemyPlayedSlots.insert(slotIndex)
+            guard let eCard = chooseCard(unit: &enemy, strategy: "highest_cost") else { continue }
 
             if let pCard = assignedCards[slotIndex] {
-                // Both sides have a card — clash
-                clash(
-                    player: &player,
-                    enemy: &enemy,
-                    playerCard: pCard,
-                    enemyCard: eCard,
-                    events: &combatEvents
-                )
+                clash(player: &player, enemy: &enemy, playerCard: pCard, enemyCard: eCard, events: &combatEvents)
             } else {
-                // Enemy unopposed with this card
-                print("Enemy unopposed with \(eCard.name)")
-
+                // Enemy attacks unopposed regardless of player stagger state
                 var tempE = enemy
                 tempE.page.speedDice = [SpeedDice(min: 1, max: 1, assignedCard: eCard)]
                 StatusManager.triggerAttackStartStatuses(on: &tempE)
                 var processedCard = tempE.page.speedDice[0].assignedCard!
 
-                while !processedCard.dice.isEmpty && !player.isStaggered {
+                while !processedCard.dice.isEmpty {
                     let die = processedCard.dice.removeFirst()
                     let eRoll = roll(min: die.minRoll, max: die.maxRoll)
-
-                    // Log the roll
-                    combatEvents.append(
-                        CombatEvent(
+                    if die.type == .atk {
+                        let (hp, stg) = calculateDamage(baseRoll: eRoll, type: die.atkType, target: player)
+                        attack(attacker: &enemy, defender: &player, chosenDice: die, diceRoll: eRoll)
+                        
+                        combatEvents.append(CombatEvent(
                             type: .roll,
                             actorName: enemy.name,
                             cardName: eCard.name,
@@ -218,51 +219,21 @@ struct FightScreen: View {
                             roll: eRoll,
                             hpDamage: nil,
                             staggerDamage: nil
-                        )
-                    )
-
-                    // Only attack if it's an attack die
-                    if die.type == .atk {
-                        let (hp, stg) = calculateDamage(
-                            baseRoll: eRoll,
-                            type: die.atkType,
-                            target: player
-                        )
-                        print("enemy do da attack unopposed here")
-                        attack(
-                            attacker: &enemy,
-                            defender: &player,
-                            chosenDice: die,
-                            diceRoll: eRoll
-                        )
-
-                        combatEvents.append(
-                            CombatEvent(
-                                type: .damage,
-                                actorName: enemy.name,
-                                cardName: eCard.name,
-                                dieIndex: 0,
-                                roll: nil,
-                                hpDamage: hp,
-                                staggerDamage: stg
-                            )
-                        )
+                        ))
+                        combatEvents.append(CombatEvent(
+                            type: .damage,
+                            actorName: enemy.name,
+                            cardName: eCard.name,
+                            dieIndex: 0,
+                            roll: nil,
+                            hpDamage: hp,
+                            staggerDamage: stg
+                        ))
                     }
                 }
             }
         }
 
-        // 4. Any player slots the enemy never matched → unopposed player attacks
-        for (slotIndex, pCard) in assignedCards {
-            if !enemyPlayedSlots.contains(slotIndex) {
-                print("Player unopposed with \(pCard.name) at slot", slotIndex)
-                unopposedAttack(attacker: &player, defender: &enemy, chosenCard: pCard)
-                // Optional: if you want the same roll-by-roll events here,
-                // you can mirror the enemy unopposed logic but for the player.
-            }
-        }
-
-        // 5. Replay events one by one into the log
         Task {
             for i in 0..<combatEvents.count {
                 currentEventIndex = i
@@ -285,14 +256,29 @@ struct FightScreen: View {
             let hp = event.hpDamage ?? 0
             let stg = event.staggerDamage ?? 0
             log.append("\(event.actorName) deals \(hp) HP / \(stg) STG")
-        case .staggerChange:
-            let delta = event.staggerDamage ?? 0
-            if delta > 0 {
-                log.append("\(event.actorName)'s stagger increases by \(delta)")
-            } else if delta < 0 {
-                log.append("\(event.actorName)'s stagger decreases by \(-delta)")
+
+            if event.actorName == enemy.name && hp > 0 {
+                showPlayerDripping = true
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_200_000_000)
+                    showPlayerDripping = false
+                }
             }
-            
+
+            if event.actorName == player.name && hp > 0 {
+                showEnemyDripping = true
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_200_000_000)
+                    showEnemyDripping = false
+                }
+            }
+
+            if player.hp <= 0 {
+                showDeathScreen = true
+            }
+
+        case .staggerChange:
+            break
         }
     }
 

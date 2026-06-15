@@ -126,13 +126,13 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
             } else if (pRoll < eRoll) {
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
-                let (hp, stg) = calculateDamage(baseRoll: pRoll, type: tempPDice.atkType, target: enemy)
-                attack(attacker: &player, defender: &enemy, chosenDice: tempPDice, diceRoll: pRoll)
+                let (hp, stg) = calculateDamage(baseRoll: eRoll, type: tempEDice.atkType, target: player)
+                attack(attacker: &enemy, defender: &player, chosenDice: tempEDice, diceRoll: eRoll)
                 events.append(
                     CombatEvent(
                         type: .damage,
-                        actorName: player.name,
-                        cardName: playerCard.name,
+                        actorName: enemy.name,
+                        cardName: enemyCard.name,
                         dieIndex: 0,
                         roll: nil,
                         hpDamage: hp,
@@ -257,8 +257,8 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 events.append(
                     CombatEvent(
                         type: .damage,
-                        actorName: player.name,
-                        cardName: playerCard.name,
+                        actorName: enemy.name,
+                        cardName: enemyCard.name,
                         dieIndex: 0,
                         roll: nil,
                         hpDamage: hp,
@@ -386,8 +386,8 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 events.append(
                     CombatEvent(
                         type: .damage,
-                        actorName: player.name,
-                        cardName: playerCard.name,
+                        actorName: enemy.name,
+                        cardName: enemyCard.name,
                         dieIndex: 0,
                         roll: nil,
                         hpDamage: hp,
@@ -399,7 +399,7 @@ func clash(player: inout Nugget, enemy: inout Nugget, playerCard: Card, enemyCar
                 tempECard.dice.removeFirst()
                 tempPCard.dice.removeFirst()
                 let before = player.stagger
-                player.stagger=max(player.page.maxStagger, player.stagger+pRoll)
+                player.stagger=min(player.page.maxStagger, player.stagger+pRoll)
                 let delta = player.stagger - before   // usually negative
                 if delta != 0 {
                     events.append(
